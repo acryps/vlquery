@@ -1,0 +1,17 @@
+{
+	"context": {
+		"outFile": "db-context.ts"
+	},
+	"compile": {
+		"scan": [
+		  "${tsout}",
+		],
+		"methods": [
+		  "where",
+		  "first",
+		  "last",
+		  "count"
+		],
+		"verbose": false
+	}
+}

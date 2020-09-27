@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+        "module": "CommonJS",
+        "outDir": "dist",
+		"target": "es6",
+		"types": [
+			"node"
+		],
+        "lib": [
+			"esnext"
+        ]
+	},
+	"include": [
+		"**/*",
+		"../config"
+	]
+}
