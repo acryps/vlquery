@@ -5,7 +5,6 @@ export interface Queryable<TModel extends Entity<TQueryProxy>, TQueryProxy exten
 	// query types
 	where(query: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy>;
 	first(query?: (item: TQueryProxy) => any): Promise<TModel>;
-	last(query?: (item: TQueryProxy) => any): Promise<TModel>;
 	single(query?: (item: TQueryProxy) => any): Promise<TModel>;
 
 	// fetching

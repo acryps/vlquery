@@ -2,8 +2,17 @@ import { Queryable } from "./queryable";
 import { Entity } from "./entity";
 import { DbClient } from "./client";
 import { QueryProxy } from "./query-proxy";
+import { Query } from "./query";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
+	constructor(
+		public modelConstructor: new () => TModel
+	) {}
+
+	get $meta() {
+		return new this.modelConstructor().$meta;
+	}
+	
 	async create(item: TModel) {
 		const properties = this.getStoredProperties(item);
 
@@ -51,17 +60,17 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	async find(id: string) {
 		return await this.first(item => item.id == id);
 	}
+
+	private toQuery() {
+		return new Query(this);
+	}
 	
 	where(query: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy> {
-		throw new Error("Uncompiled query cannot be used in runtime");
+		return this.toQuery().where(query);
 	}
 
 	first(query?: (item: TQueryProxy) => any): Promise<TModel> {
-		throw new Error("Uncompiled query cannot be used in runtime");
-	}
-
-	last(query?: (item: TQueryProxy) => any): Promise<TModel> {
-		throw new Error("Uncompiled query cannot be used in runtime");
+		return this.toQuery().first(query);
 	}
 
 	single(query?: (item: TQueryProxy) => any): Promise<TModel> {

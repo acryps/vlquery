@@ -2,17 +2,25 @@
 	"name": "slotter-tools",
 	"version": "1.0.0",
 	"description": "",
-	"main": "dist/main.js",
+	"main": "dist/index.js",
+	"typings": "dist/index.d.ts",
 	"scripts": {
 		"preinstall": "mkdir -p node_modules; touch ./node_modules/.metadata_never_index",
-		"db-context": "tsc ; node dist/scripts/db-context.js",
-		"vl-query": "tsc ; node dist/scripts/vl-query.js"
+		"install": "tsc",
+		"db-context": "node dist/scripts/db-context.js",
+		"vl-query": "node dist/scripts/vl-query.js"
 	},
-	"author": "",
+	"bin": {
+		"vlquery": "./bin/vlquery.js"
+	},
+	"author": "Levi Hechenberger",
 	"license": "ISC",
 	"dependencies": {
 		"@types/node": "^14.6.2",
 		"esprima": "^4.0.1",
 		"pg": "^8.3.3"
+	},
+	"devDependencies": {
+		"typescript": "^4.0.3"
 	}
 }

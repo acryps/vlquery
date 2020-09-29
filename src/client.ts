@@ -1,13 +1,12 @@
 import { Client } from "pg";
-import { Config } from "../../config/config";
 
 export class DbClient {
 	static connectedClient: DbClient;
 	
 	connection: Client;
 
-	constructor() {
-		this.connection = new Client(Config.db);
+	constructor(configuration) {
+		this.connection = new Client(configuration);
 	}
 
 	async connect() {

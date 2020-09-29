@@ -4,7 +4,7 @@
 	},
 	"compile": {
 		"scan": [
-		  "${tsout}",
+		  "${tsout}"
 		],
 		"methods": [
 		  "where",

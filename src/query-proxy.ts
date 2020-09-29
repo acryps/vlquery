@@ -40,6 +40,8 @@ export class QueryDate extends QueryType {
 	year: number;
 	month: number;
 	date: number;
+	week: number;
+	dayOfWeek: number;
 }
 
 export class QueryTime extends QueryType {
@@ -51,6 +53,7 @@ export class QueryTime extends QueryType {
 	minute: number;
 	second: number;
 	milisecond: number;
+	microseconds: number;
 }
 
 export class QueryTimeStamp extends QueryType {
@@ -73,5 +76,8 @@ export class QueryTimeStamp extends QueryType {
 	minute: number;
 	second: number;
 	milisecond: number;
+	week: number;
+	dayOfWeek: number;
+	microseconds: number;
 }
 

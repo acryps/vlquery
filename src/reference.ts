@@ -35,10 +35,6 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 		throw new Error("Method not implemented.");
 	}
 
-	last(query?: (item: TQueryProxy) => any): Promise<TSource> {
-		throw new Error("Method not implemented.");
-	}
-
 	single(query?: (item: TQueryProxy) => any): Promise<TSource> {
 		throw new Error("Method not implemented.");
 	}

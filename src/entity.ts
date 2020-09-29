@@ -1,4 +1,3 @@
-import { db } from "./context";
 import { QueryProxy } from "./query-proxy";
 import { Queryable } from "./queryable";
 import { DbSet } from "./set";
