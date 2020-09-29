@@ -213,7 +213,7 @@ export function createContext() {
 	};
 		`;
 
-		fs.writeFileSync(`${__dirname}/../../../server/db/context.ts`, context);
+		fs.writeFileSync(`${config.root}/${config.context.outFile}`, context);
 	}
 
 	main().then(async () => {

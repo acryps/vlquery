@@ -16,6 +16,7 @@ if (path.parse(rootFolder).root == rootFolder) {
 const userConfig = JSON.parse(fs.readFileSync(`${rootFolder}/vlquery.json`).toString());
 
 export const config = {
+	root: rootFolder,
 	context: {
 		outFile: (userConfig.context && userConfig.context.outFile) || "db-context.ts",
 		connection: (userConfig.context && userConfig.context.connection) || {}
