@@ -1,26 +1,41 @@
 {
-	"name": "vlquery",
-	"version": "1.0.0",
-	"description": "",
-	"main": "dist/index.js",
-	"typings": "dist/index.d.ts",
-	"scripts": {
-		"preinstall": "mkdir -p node_modules; touch ./node_modules/.metadata_never_index",
-		"install": "tsc",
-		"db-context": "node dist/scripts/db-context.js",
-		"vl-query": "node dist/scripts/vl-query.js"
-	},
-	"bin": {
-		"vlquery": "./bin/vlquery.js"
-	},
-	"author": "Levi Hechenberger",
-	"license": "ISC",
-	"dependencies": {
-		"@types/node": "^14.6.2",
-		"esprima": "^4.0.1",
-		"pg": "^8.3.3"
-	},
-	"devDependencies": {
-		"typescript": "^4.0.3"
-	}
+  "name": "vlquery",
+  "version": "1.0.0",
+  "description": "VLQuery ORM",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "preinstall": "mkdir -p node_modules; touch ./node_modules/.metadata_never_index",
+    "install": "tsc",
+    "db-context": "node dist/scripts/db-context.js",
+    "vl-query": "node dist/scripts/vl-query.js"
+  },
+  "bin": {
+    "vlquery": "bin/vlquery.js"
+  },
+  "author": "Levi Hechenberger",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^14.6.2",
+    "esprima": "^4.0.1",
+    "pg": "^8.3.3"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/levvij/vlquery.git"
+  },
+  "keywords": [
+    "orm",
+    "typescript",
+    "vlquery",
+    "vlvtin",
+    "vlvt"
+  ],
+  "bugs": {
+    "url": "https://github.com/levvij/vlquery/issues"
+  },
+  "homepage": "https://github.com/levvij/vlquery#readme"
 }
