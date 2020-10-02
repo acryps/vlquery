@@ -1,4 +1,4 @@
-aimport fs = require("fs");
+import fs = require("fs");
 
 import { compileQueries } from "./parser";
 import { createContext } from "./context-generator";
