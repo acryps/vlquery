@@ -46,10 +46,10 @@ export function createContext() {
 		`)).rows;
 
 		let context = `
-	import { Entity } from "./entity";
-	import { DbSet } from "./set";
-	import { QueryProxy, QueryString, QueryTimeStamp, QueryNumber, QueryTime, QueryDate } from "./query-proxy";
-	import { ForeignReference, PrimaryReference } from "./reference";
+import { Entity } from "vlquery";
+import { DbSet } from "vlquery";
+import { QueryProxy, QueryString, QueryTimeStamp, QueryNumber, QueryTime, QueryDate } from "vlquery";
+import { ForeignReference, PrimaryReference } from "vlquery";
 		`.trim();
 		let sets = [];
 
@@ -94,48 +94,50 @@ export function createContext() {
 
 				if (constraint.table_name == table) {
 					constr += `
-			this.$${convertToModelName(parts[0])} = new ForeignReference<${convertToClassName(constraint.foreign_table_name)}>(
-				this,
-				${JSON.stringify(convertToModelName(constraint.column_name))},
-				${convertToClassName(constraint.foreign_table_name)}
-			);
+		this.$${convertToModelName(parts[0])} = new ForeignReference<${convertToClassName(constraint.foreign_table_name)}>(
+			this,
+			${JSON.stringify(convertToModelName(constraint.column_name))},
+			${convertToClassName(constraint.foreign_table_name)}
+		);
 					`;
 
 					body += `
-		private $${convertToModelName(parts[0])}: ForeignReference<${convertToClassName(constraint.foreign_table_name)}>;
+	private $${convertToModelName(parts[0])}: ForeignReference<${convertToClassName(constraint.foreign_table_name)}>;
 
-		get ${convertToModelName(parts[0])}(): ForeignReference<${convertToClassName(constraint.foreign_table_name)}> {
-			return this.$${convertToModelName(parts[0])};
-		}
+	get ${convertToModelName(parts[0])}(): ForeignReference<${convertToClassName(constraint.foreign_table_name)}> {
+		return this.$${convertToModelName(parts[0])};
+	}
 
-		set ${convertToModelName(parts[0])}(value: ForeignReference<${convertToClassName(constraint.foreign_table_name)}>) {
-			if (value) {
-				if (!value.id) {
-					throw new Error("Invalid null id. Save the referenced model prior to creating a reference to it.");
-				}
-
-				this.${convertToModelName(constraint.column_name)} = value.id;
-			} else {
-				this.${convertToModelName(constraint.column_name)} = null;
+	set ${convertToModelName(parts[0])}(value: ForeignReference<${convertToClassName(constraint.foreign_table_name)}>) {
+		if (value) {
+			if (!value.id) {
+				throw new Error("Invalid null id. Save the referenced model prior to creating a reference to it.");
 			}
+
+			this.${convertToModelName(constraint.column_name)} = value.id;
+		} else {
+			this.${convertToModelName(constraint.column_name)} = null;
 		}
+	}
 					`;
 
 					proxyBody += `
-		get ${convertToModelName(parts[0])}(): ${convertToQueryProxyName(constraint.foreign_table_name)} {
-			throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
-		}
+	get ${convertToModelName(parts[0])}(): ${convertToQueryProxyName(constraint.foreign_table_name)} {
+		throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
+	}
 					`;
 				} else {
 					constr += `
-			this.${convertToModelName(parts[1])} = new PrimaryReference<${convertToClassName(constraint.table_name)}, ${convertToQueryProxyName(constraint.table_name)}>(
-				this,
-				${JSON.stringify(convertToModelName(constraint.column_name))},
-				${convertToClassName(constraint.table_name)}
-			);
+		this.${convertToModelName(parts[1])} = new PrimaryReference<${convertToClassName(constraint.table_name)}, ${convertToQueryProxyName(constraint.table_name)}>(
+			this,
+			${JSON.stringify(convertToModelName(constraint.column_name))},
+			${convertToClassName(constraint.table_name)}
+		);
 					`;
 
-					body += `${convertToModelName(parts[1])}: PrimaryReference<${convertToClassName(constraint.table_name)}, ${convertToQueryProxyName(constraint.table_name)}>;\n\t`;
+					body += `
+	${convertToModelName(parts[1])}: PrimaryReference<${convertToClassName(constraint.table_name)}, ${convertToQueryProxyName(constraint.table_name)}>;
+					`;
 				}
 			}
 
@@ -170,36 +172,36 @@ export function createContext() {
 				body += `${convertToModelName(column.column_name)}: ${type};\n\t`;
 
 				proxyBody += `
-		get ${convertToModelName(column.column_name)}(): ${proxyType} {
-			throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
-		}
+	get ${convertToModelName(column.column_name)}(): ${proxyType} {
+		throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
+	}
 				`;
 			}
 
 			console.groupEnd();
 
 			context += `
-	export class ${convertToQueryProxyName(table)} extends QueryProxy {
-		${proxyBody.trim()}
-	}
+export class ${convertToQueryProxyName(table)} extends QueryProxy {
+	${proxyBody.trim()}
+}
 
-	export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyName(table)}> {
-		$meta = {
-			tableName: ${JSON.stringify(table)},
-			columns: ${JSON.stringify(columnMappings)},
-			get set() {
-				return db.${convertToModelName(table)}
-			}
-		};
-		
-		constructor() {
-			super();
-
-			${constr.trim()}
+export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyName(table)}> {
+	$meta = {
+		tableName: ${JSON.stringify(table)},
+		columns: ${JSON.stringify(columnMappings)},
+		get set() {
+			return db.${convertToModelName(table)}
 		}
+	};
+		
+	constructor() {
+		super();
 
-		${body.trim()}
+		${constr.trim()}
 	}
+
+	${body.trim()}
+}
 			`;
 
 			sets.push(`static ${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)});`);
@@ -208,9 +210,9 @@ export function createContext() {
 		}
 
 		context += `
-	export class db {
-		${sets.join("\n\t")}
-	};
+export class db {
+	${sets.join("\n\t")}
+};
 		`;
 
 		fs.writeFileSync(`${config.root}/${config.context.outFile}`, context);
