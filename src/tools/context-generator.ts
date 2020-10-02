@@ -50,7 +50,7 @@ import { Entity } from "vlquery";
 import { DbSet } from "vlquery";
 import { QueryProxy, QueryString, QueryTimeStamp, QueryNumber, QueryTime, QueryDate } from "vlquery";
 import { ForeignReference, PrimaryReference } from "vlquery";
-		`.trim();
+		`.trim() + "\n";
 		let sets = [];
 
 		for (let table of tables.map(t => t.tablename)) {

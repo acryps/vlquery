@@ -172,7 +172,11 @@ export function compileQueries() {
 			if (fs.lstatSync(path).isDirectory()) {
 				scan(path);
 			} else if (path.endsWith(".js")) {
-				compile(path);
+				try {
+					compile(path);
+				} catch (e) {
+					console.error(`Compiling of '${path}' failed!`, e);
+				}
 			}
 		}
 	}
