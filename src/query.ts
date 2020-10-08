@@ -4,6 +4,7 @@ import { Entity } from "./entity";
 import { QueryProxy } from "./query-proxy";
 import { DbClient } from "./client";
 import { ForeignReference } from "./reference";
+import { queryFunctions, QueryFunction } from "./functions";
 
 export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> implements Queryable<TModel, TQueryModel> {
 	public limitRows = -1;
@@ -56,7 +57,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 
 		console.log("SQL " + "-".repeat(30 - 4) + "\n" + sql + "-".repeat(30));
 
-		return DbClient.connectedClient.query(sql, this.parameters.map(p => p.value));
+		return DbClient.query(sql, this.parameters.map(p => p.value));
 	}
 
 	include(selector: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
@@ -115,7 +116,7 @@ class QueryJoin<TModel extends Entity<TQueryModel>, TQueryModel extends QueryPro
 	}
 }
 
-class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
+export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
 	compare?: {
 		left: QueryFragment<TModel, TQueryModel>;
 		right: QueryFragment<TModel, TQueryModel>;
@@ -133,6 +134,12 @@ class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel extends Quer
 		extent: QueryExtent<TModel, TQueryModel>;
 		part?: string;
 	};
+
+	call: {
+		parameters: QueryFragment<TModel, TQueryModel>[];
+		to: QueryFunction;
+		source: QueryFragment<TModel, TQueryModel>;
+	}
 	
 	constructor(
 		public query: Query<TModel, TQueryModel>,
@@ -168,6 +175,18 @@ class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel extends Quer
 
 		if (tree.value) {
 			this.query.parameters.push(new QueryParameter(query, tree.value));
+		}
+
+		if (tree.call) {
+			const func = queryFunctions[tree.call.to[tree.call.to.length - 1]];
+
+			this.call = {
+				to: func,
+				parameters: tree.call.parameters.map(p => new QueryFragment<TModel, TQueryModel>(query, p)),
+				source: new QueryFragment<TModel, TQueryModel>(query, {
+					path: tree.call.to.slice(0, tree.call.to.length - 2)
+				})
+			}
 		}
 
 		if (tree.path) {
@@ -234,6 +253,10 @@ class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel extends Quer
 			} ${this.logical.operator} ${
 				this.logical.right.toSQL()
 			})`;
+		}
+
+		if (this.call) {
+			return `(${this.call.to.toSQL(this)})`;
 		}
 
 		if (this.path) {
