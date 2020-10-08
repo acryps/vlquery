@@ -17,8 +17,14 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 
 	static defaultPageSize = 100;
 	
-	constructor(public set: DbSet<TModel, TQueryModel>) {
+	constructor(public set: DbSet<TModel, TQueryModel>, preConditions?: CompiledQuery[]) {
 		this.rootExtent = new QueryExtent(this);
+
+		if (preConditions) {
+			for (let condition of preConditions) {
+				this.where(condition as unknown as (item: TQueryModel) => any);
+			}
+		}
 	}
 
 	where(query: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
