@@ -52,12 +52,16 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 		return res;
 	}
 
-	async toArray(): Promise<TModel[]> {
+	private async toArrayRaw(): Promise<any[]> {
 		const sql = this.toSQL();
 
 		console.log("SQL " + "-".repeat(30 - 4), this, sql, "-".repeat(30));
 
 		return await DbClient.query(sql, this.parameters.map(p => p.value));
+	}
+
+	async toArray(): Promise<TModel[]> {
+		return (await this.toArrayRaw()).map(raw => this.set.constructObject(raw));
 	}
 
 	include(selector: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {

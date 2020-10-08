@@ -74,11 +74,11 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	}
 
 	single(query?: (item: TQueryProxy) => any): Promise<TModel> {
-		throw new Error("Uncompiled query cannot be used in runtime");
+		return this.toQuery().single(query);
 	}
 
 	toArray(): Promise<TModel[]> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().toArray();
 	}
 
 	include(selector: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy> {
@@ -105,5 +105,15 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 	page(index: number, size?: number): Queryable<TModel, TQueryProxy> {
 		throw new Error("Method not implemented.");
+	}
+
+	constructObject(raw: any) {
+		const model = new this.modelConstructor();
+
+		for (let col in model.$meta.columns) {
+			model[col] = raw[model.$meta.columns[col].name];
+		}
+
+		return model;
 	}
 }
