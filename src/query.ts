@@ -195,7 +195,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 
 			for (let i = 0; i < tree.path.length; i++) {
 				const name = tree.path[i];
-				const component = set.$meta[name];
+				const component = set.$meta.columns[name];
 
 				if (component) {
 					// simple attribute

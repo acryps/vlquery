@@ -107,7 +107,7 @@ export function compileQueries() {
 
 					const parameters = expression.arguments.map(a => parseFilter(a, itemParamName, content));
 
-					return `{ call: { to: ${JSON.stringify(path)}, parameters: [${parameters}] } }`;
+					return `{ call: { to: ${JSON.stringify(path.slice(1))}, parameters: [${parameters}] } }`;
 				}
 			} else if (expression.type == "UnaryExpression") {
 				if (expression.operator == "!") {
