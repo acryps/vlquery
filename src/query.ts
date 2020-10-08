@@ -177,8 +177,6 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 
 		if (tree.value) {
 			this.valueParameter = new QueryParameter(query, tree.value);
-
-			this.query.parameters.push(this.valueParameter);
 		}
 
 		if (tree.call) {
@@ -204,7 +202,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 				if (component) {
 					// simple attribute
 					this.path = {
-						column: name,
+						column: component.name,
 						extent,
 						part: tree.path[i + 1]
 					};
