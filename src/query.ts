@@ -57,7 +57,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 
 		console.log(
 			"SQL " + "-".repeat(30 - 4), 
-			sql.replace(/$[0-9]+/g, match => `<${this.parameters[+match.replace("$", "") - 1].value}>`), 
+			sql.replace(/\$[0-9]+/g, match => `<${this.parameters[+match.replace("$", "") - 1].value}>`), 
 			"-".repeat(30)
 		);
 
