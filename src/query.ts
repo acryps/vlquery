@@ -52,12 +52,12 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 		return res;
 	}
 
-	toArray(): Promise<TModel[]> {
+	async toArray(): Promise<TModel[]> {
 		const sql = this.toSQL();
 
 		console.log("SQL " + "-".repeat(30 - 4), this, sql, "-".repeat(30));
 
-		return DbClient.query(sql, this.parameters.map(p => p.value));
+		return await DbClient.query(sql, this.parameters.map(p => p.value));
 	}
 
 	include(selector: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
