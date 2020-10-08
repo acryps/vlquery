@@ -55,7 +55,11 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	private async toArrayRaw(): Promise<any[]> {
 		const sql = this.toSQL();
 
-		console.log("SQL " + "-".repeat(30 - 4), this, sql, "-".repeat(30));
+		console.log(
+			"SQL " + "-".repeat(30 - 4), 
+			sql.replace(/$[0-9]+/g, match => `<${this.parameters[+match.replace("$", "") - 1].value}>`), 
+			"-".repeat(30)
+		);
 
 		return await DbClient.query(sql, this.parameters.map(p => p.value));
 	}
