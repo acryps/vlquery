@@ -4,13 +4,13 @@
 	},
 	"compile": {
 		"scan": [
-		  "${tsout}"
+			"${tsout}"
 		],
 		"methods": [
-		  "where",
-		  "first",
-		  "last",
-		  "count"
+			"where",
+			"first",
+			"last",
+			"count"
 		],
 		"verbose": false
 	}

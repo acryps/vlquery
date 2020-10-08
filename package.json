@@ -1,12 +1,12 @@
 {
 	"name": "vlquery",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "VLQuery ORM [WIP]",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
 	"scripts": {
 		"preinstall": "mkdir -p node_modules; touch ./node_modules/.metadata_never_index",
-		"install": "tsc"
+		"install": "tsc; npx vlquery compile"
 	},
 	"bin": {
 		"vlquery": "bin/vlquery.js"
