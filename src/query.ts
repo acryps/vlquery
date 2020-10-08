@@ -55,7 +55,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	toArray(): Promise<TModel[]> {
 		const sql = this.toSQL();
 
-		console.log("SQL " + "-".repeat(30 - 4) + "\n" + sql + "-".repeat(30));
+		console.log("SQL " + "-".repeat(30 - 4), this, sql, "-".repeat(30));
 
 		return DbClient.query(sql, this.parameters.map(p => p.value));
 	}
