@@ -140,6 +140,8 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 		to: QueryFunction;
 		source: QueryFragment<TModel, TQueryModel>;
 	}
+
+	valueParameter: QueryParameter<TModel, TQueryModel>;
 	
 	constructor(
 		public query: Query<TModel, TQueryModel>,
@@ -174,7 +176,9 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 		}
 
 		if (tree.value) {
-			this.query.parameters.push(new QueryParameter(query, tree.value));
+			this.valueParameter = new QueryParameter(query, tree.value);
+
+			this.query.parameters.push(this.valueParameter);
 		}
 
 		if (tree.call) {
@@ -184,7 +188,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 				to: func,
 				parameters: tree.call.parameters.map(p => new QueryFragment<TModel, TQueryModel>(query, p)),
 				source: new QueryFragment<TModel, TQueryModel>(query, {
-					path: tree.call.to.slice(0, tree.call.to.length - 2)
+					path: tree.call.to.slice(0, tree.call.to.length - 1)
 				})
 			}
 		}
@@ -257,6 +261,10 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 
 		if (this.call) {
 			return `(${this.call.to.toSQL(this)})`;
+		}
+
+		if (this.valueParameter) {;
+			return this.valueParameter.name;
 		}
 
 		if (this.path) {
