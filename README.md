@@ -51,4 +51,10 @@ DbClient.connectedClient.connect().then(async () => {
 ```
 
 This should return the first row in the entity 'person' with the firstname 'Jonny'.
+
+Now make sure to swap your tsc build task with:
+```
+tsc ; npx vlquery compile
+```
+
 You're good to go!
