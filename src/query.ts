@@ -431,6 +431,7 @@ class QueryOrder<TModel extends Entity<TQueryModel>, TQueryModel extends QueryPr
 class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
 	relation: ForeignReference<TModel>;
 	prefix: string;
+	extent: QueryExtent<TModel, TQueryModel>;
 	
 	constructor(
 		public query: Query<TModel, TQueryModel>,
@@ -439,6 +440,13 @@ class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 		const proxy = new query.set.modelConstructor();
 
 		this.relation = selector(proxy as unknown as TQueryModel);
+
+		this.extent = new QueryJoin(
+			query, 
+			query.rootExtent, 
+			new this.relation.$relation().$meta.tableName, 
+			this.relation.$column
+		).extent;
 
 		if (!(this.relation instanceof ForeignReference)) {
 			throw new Error(`Invalid include selector '${selector}'`);
@@ -450,6 +458,6 @@ class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	toSQL() {
 		const cols = new this.relation.$relation().$meta.columns;
 
-		return Object.keys(cols).map(key => `${this.query.rootExtent.name}.${cols[key].name} AS ${this.prefix}${cols[key].name}`).join(", ");
+		return Object.keys(cols).map(key => `${this.extent.name}.${cols[key].name} AS ${this.prefix}${cols[key].name}`).join(", ");
 	}
 }
