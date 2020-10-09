@@ -2,7 +2,8 @@ import { Queryable } from "./queryable";
 import { Entity } from "./entity";
 import { DbClient } from "./client";
 import { QueryProxy } from "./query-proxy";
-import { Query, QueryInclude } from "./query";
+import { Query } from "./query";
+import { QueryInclude } from "./query-operators/include";
 import { ForeignReference, PrimaryReference } from ".";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
