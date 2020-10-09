@@ -2,7 +2,8 @@ import { Queryable } from "./queryable";
 import { Entity } from "./entity";
 import { DbClient } from "./client";
 import { QueryProxy } from "./query-proxy";
-import { Query } from "./query";
+import { Query, QueryInclude } from "./query";
+import { ForeignReference } from ".";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	constructor(
@@ -107,11 +108,29 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return this.toQuery().page(index, size);
 	}
 
-	constructObject(raw: any) {
+	constructObject(raw: any, includes: QueryInclude<TModel, TQueryProxy>[]) {
 		const model = new this.modelConstructor();
 
 		for (let col in model.$meta.columns) {
 			model[col] = raw[model.$meta.columns[col].name];
+		}
+
+		for (let include of includes) {
+			for (let key in model) {
+				const col = model[key];
+
+				if (col instanceof ForeignReference && col.$column == include.relation.$column) {
+					const innerRaw = {};
+
+					for (let key in raw) {
+						if (key.startsWith(include.prefix)) {
+							innerRaw[key.replace(include.prefix, "")] = raw[key];
+						}
+					}
+
+					col["$stored"] = new include.relation.$relation().$meta.set.constructObject(innerRaw, []);
+				}
+			}
 		}
 
 		return model;

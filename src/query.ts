@@ -74,7 +74,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	}
 
 	async toArray(): Promise<TModel[]> {
-		return (await this.toArrayRaw()).map(raw => this.set.constructObject(raw));
+		return (await this.toArrayRaw()).map(raw => this.set.constructObject(raw, this.includes));
 	}
 
 	include(selector: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
@@ -428,7 +428,7 @@ class QueryOrder<TModel extends Entity<TQueryModel>, TQueryModel extends QueryPr
 	}
 }
 
-class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
+export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
 	relation: ForeignReference<TModel>;
 	prefix: string;
 	extent: QueryExtent<TModel, TQueryModel>;
