@@ -119,6 +119,8 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 			${this.joins.map(j => j.toSQL()).join("\n")}
 			${this.conditions.length ? `WHERE ${this.conditions.map(c => c.toSQL()).join(" AND ")}` : ""}
 			${this.orders.length ? `ORDER BY ${this.orders.map(order => order.toSQL()).join(", ")}` : ""}
+			${this.limitRows == -1 ? "" : `LIMIT ${new QueryParameter(this, this.limitRows).name}`}
+			${this.skipRows == -1 ? "" : `OFFSET ${new QueryParameter(this, this.skipRows).name}`}
 		
 		`;
 	}

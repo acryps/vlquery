@@ -71,14 +71,14 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 	}
 
 	skip(count: number): Queryable<TSource, TQueryProxy> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().skip(count);
 	}
 
 	limit(count: number): Queryable<TSource, TQueryProxy> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().limit(count);
 	}
 
 	page(index: number, size?: number): Queryable<TSource, TQueryProxy> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().page(index, size);
 	}
 }

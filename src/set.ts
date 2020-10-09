@@ -96,15 +96,15 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	}
 
 	skip(count: number): Queryable<TModel, TQueryProxy> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().skip(count);
 	}
 
 	limit(count: number): Queryable<TModel, TQueryProxy> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().limit(count);
 	}
 
 	page(index: number, size?: number): Queryable<TModel, TQueryProxy> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().page(index, size);
 	}
 
 	constructObject(raw: any) {
