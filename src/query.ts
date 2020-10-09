@@ -445,14 +445,14 @@ class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 			query, 
 			query.rootExtent, 
 			new this.relation.$relation().$meta.tableName, 
-			this.relation.$column
+			this.relation.$item.$meta.columns[this.relation.$column].name
 		).extent;
 
 		if (!(this.relation instanceof ForeignReference)) {
 			throw new Error(`Invalid include selector '${selector}'`);
 		}
 
-		this.prefix = `inc_${this.query.includes.length}_`;
+		this.prefix = `inc${this.query.includes.length}_`;
 	}
 
 	toSQL() {
