@@ -1,4 +1,5 @@
-import { Query, Entity, QueryProxy, QueryFragment } from ".";
+import { Query, Entity, QueryProxy } from ".";
+import { QueryFragment } from "./query-operators/fragment";
 
 export class QueryFunction {
 	constructor(
