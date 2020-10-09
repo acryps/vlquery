@@ -10,7 +10,7 @@ Let's install the vlquery package
 npm install vlquery --save
 ```
 
-Now, let's create a vlquery configuration file `vlconfig.json` in your projects root
+Now, let's create a vlquery configuration file `vlquery.json` in your projects root
 ```
 {
 	"context": {
