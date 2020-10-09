@@ -29,9 +29,7 @@ export class Entity<TQueryProxy extends QueryProxy> {
 		return await this.$meta.set.update(this) as this;
 	}
 
-	async delete(): Promise<this> {
-		throw "NOT IMPLEMENTED";
-
-		// return await this.$meta.set.delete(this) as this;
+	async delete(): Promise<void> {
+		await this.$meta.set.delete(this);
 	}
 }

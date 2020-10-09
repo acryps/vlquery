@@ -66,7 +66,9 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 		return this.toQuery().include(selector);
 	}
 
-	count: Promise<number>;
+	get count(): Promise<number> {
+		return this.toQuery().count;
+	}
 
 	orderByAscending(sorter: (item: TQueryProxy) => any): Queryable<TSource, TQueryProxy> {
 		return this.toQuery().orderByAscending(sorter);

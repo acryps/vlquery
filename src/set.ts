@@ -3,7 +3,7 @@ import { Entity } from "./entity";
 import { DbClient } from "./client";
 import { QueryProxy } from "./query-proxy";
 import { Query, QueryInclude } from "./query";
-import { ForeignReference } from ".";
+import { ForeignReference, PrimaryReference } from ".";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	constructor(
@@ -47,6 +47,30 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		]);
 
 		return item;
+	}
+
+	async delete(item: TModel) {
+		for (let key in item) {
+			const column = item[key];
+
+			if (key[0] == "$" && column instanceof PrimaryReference) {
+				const count = await column.count;
+
+				if (count) {
+					throw new Error(`Cannot delete '${item.id}' from '${this.$meta.tableName}'. ${count} items from '${new column.$relation().$meta.tableName}' still reference it`);
+				}
+			}
+		}
+
+		await DbClient.query(`
+		
+			UPDATE ${item.$meta.tableName} 
+			SET _active = false
+			WHERE id = $1
+		
+		`, [
+			item.id
+		]);
 	}
 
 	private getStoredProperties(item: TModel) {
@@ -101,7 +125,9 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return this.toQuery().include(selector);
 	}
 
-	count: Promise<number>;
+	get count(): Promise<number> {
+		return this.toQuery().count;
+	}
 
 	orderByAscending(sorter: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy> {
 		return this.toQuery().orderByAscending(sorter);

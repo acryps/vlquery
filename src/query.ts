@@ -14,6 +14,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	public parameters: QueryParameter<TModel, TQueryModel>[] = [];
 	public orders: QueryOrder<TModel, TQueryModel>[] = [];
 	public includes: QueryInclude<TModel, TQueryModel>[] = [];
+	public onlyCount: boolean;
 
 	public rootExtent: QueryExtent<TModel, TQueryModel>;
 	public extentIndex = 0;
@@ -83,7 +84,11 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 		return this;
 	}
 
-	count: Promise<number>;
+	get count(): Promise<number> {
+		this.onlyCount = true;
+
+		return this.toArrayRaw().then(raw => raw[0].count);
+	}
 
 	orderByAscending(sorter: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
 		this.orders.push(new QueryOrder(this, sorter, "asc"));
@@ -118,7 +123,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	toSQL() {
 		return `
 		
-			SELECT ${this.rootExtent.name}.*${this.includes.map(i => `, ${i.toSQL()}`)}
+			SELECT ${this.onlyCount ? `COUNT(${this.rootExtent.name}) AS count` : `${this.rootExtent.name}.*${this.includes.map(i => `, ${i.toSQL()}`)}`}
 			FROM ${this.set.$meta.tableName} AS ${this.rootExtent.name}
 			${this.joins.map(j => j.toSQL()).join("\n")}
 			WHERE ${this.rootExtent.name}._active${this.conditions.length ? " AND " : ""}${this.conditions.map(c => c.toSQL()).join(" AND ")}
