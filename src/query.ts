@@ -118,7 +118,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	toSQL() {
 		return `
 		
-			SELECT ${this.rootExtent.name}.*
+			SELECT ${this.rootExtent.name}.*${this.includes.map(i => `, ${i.toSQL()}`)}
 			FROM ${this.set.$meta.tableName} AS ${this.rootExtent.name}
 			${this.joins.map(j => j.toSQL()).join("\n")}
 			${this.conditions.length ? `WHERE ${this.conditions.map(c => c.toSQL()).join(" AND ")}` : ""}
