@@ -35,7 +35,7 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 			compare: {
 				operator: "=",
 				left: { path: [ this.$column ] },
-				right: { value: [ this.$item.id ] }
+				right: { value: this.$item.id }
 			}
 		}]) as unknown as Queryable<TSource, TQueryProxy>;
 	}
