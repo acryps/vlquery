@@ -162,6 +162,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 		source: QueryFragment<TModel, TQueryModel>;
 	}
 
+	isNull: boolean;
 	valueParameter: QueryParameter<TModel, TQueryModel>;
 	
 	constructor(
@@ -197,7 +198,11 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 		}
 
 		if (tree.value) {
-			this.valueParameter = new QueryParameter(query, tree.value);
+			if (tree.value === null) {
+				this.isNull = true;
+			} else {
+				this.valueParameter = new QueryParameter(query, tree.value);
+			}
 		}
 
 		if (tree.call) {
@@ -249,7 +254,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 
 	toSQL() {
 		if (this.compare) {
-			if (this.compare.left === null) {
+			if (this.compare.left.isNull) {
 				if (this.compare.operator == "=") {
 					return `${this.compare.right.toSQL()} IS NULL`;
 				}
@@ -259,7 +264,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 				}
 			}
 
-			if (this.compare.right === null) {
+			if (this.compare.right.isNull) {
 				if (this.compare.operator == "=") {
 					return `${this.compare.left.toSQL()} IS NULL`;
 				}

@@ -2,9 +2,7 @@ export class QueryProxy {
 	id: string;
 }
 
-export class QueryType {
-	isNull: boolean;
-}
+export class QueryType {}
 
 export class QueryString extends QueryType {
 	valueOf(): string {
