@@ -88,11 +88,11 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	count: Promise<number>;
 
 	orderByAscending(sorter: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().orderByAscending(sorter);
 	}
 
 	orderByDescending(sorter: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().orderByDescending(sorter);
 	}
 
 	skip(count: number): Queryable<TModel, TQueryProxy> {

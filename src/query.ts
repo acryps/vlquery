@@ -13,6 +13,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	public conditions: QueryFragment<TModel, TQueryModel>[] = [];
 	public rootExtent: QueryExtent<TModel, TQueryModel>;
 	public parameters: QueryParameter<TModel, TQueryModel>[] = [];
+	public orders: QueryOrder<TModel, TQueryModel>[] = [];
 	public extentIndex = 0;
 
 	static defaultPageSize = 100;
@@ -81,11 +82,15 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	count: Promise<number>;
 
 	orderByAscending(sorter: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
-		throw new Error("Method not implemented.");
+		this.orders.push(new QueryOrder(this, sorter, "asc"));
+
+		return this;
 	}
 
 	orderByDescending(sorter: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
-		throw new Error("Method not implemented.");
+		this.orders.push(new QueryOrder(this, sorter, "dsc"));
+
+		return this;
 	}
 
 	skip(count: number): Queryable<TModel, TQueryModel> {
@@ -113,6 +118,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 			FROM ${this.set.$meta.tableName} AS ${this.rootExtent.name}
 			${this.joins.map(j => j.toSQL()).join("\n")}
 			${this.conditions.length ? `WHERE ${this.conditions.map(c => c.toSQL()).join(" AND ")}` : ""}
+			${this.orders.length ? `ORDER BY ${this.orders.map(order => order.toSQL()).join(", ")}` : ""}
 		
 		`;
 	}
@@ -376,4 +382,42 @@ interface CompiledQuery {
 	};
 
 	value?: any;
+}
+
+class QueryOrder<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
+	extent: QueryExtent<TModel, TQueryModel>;
+	column: { name: string; type: string };
+	
+	constructor(
+		public query: Query<TModel, TQueryModel>,
+		sorter: (item: TQueryModel) => any,
+		public direction: "asc" | "dsc"
+	) {
+		const properties = sorter.toString().split("=>")[1].split(".").map(v => v.trim());
+
+		this.extent = query.rootExtent;
+		let set = query.set as DbSet<Entity<QueryProxy>, QueryProxy>;
+
+		for (let i = 0; i < properties.length - 1; i++) {
+			const name = properties[i];
+			const proxy = new set.modelConstructor();
+			const reference = proxy[name] as ForeignReference<Entity<QueryProxy>>;
+
+			const join = new QueryJoin(
+				query, 
+				this.extent, 
+				(new reference.$relation()).$meta.tableName, 
+				reference.$item.$meta.columns[reference.$column].name
+			);
+
+			this.extent = join.extent;
+			set = new reference.$relation().$meta.set;
+		}
+
+		this.column = set.$meta.columns[properties[properties.length - 1]];
+	}
+
+	toSQL() {
+		return `${this.extent.name}.${this.column.name} ${this.direction}`;
+	}
 }

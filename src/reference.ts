@@ -63,11 +63,11 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 	count: Promise<number>;
 
 	orderByAscending(sorter: (item: TQueryProxy) => any): Queryable<TSource, TQueryProxy> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().orderByAscending(sorter);
 	}
 
 	orderByDescending(sorter: (item: TQueryProxy) => any): Queryable<TSource, TQueryProxy> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().orderByDescending(sorter);
 	}
 
 	skip(count: number): Queryable<TSource, TQueryProxy> {
