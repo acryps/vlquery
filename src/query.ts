@@ -235,7 +235,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 						query, 
 						extent, 
 						(new reference.$relation()).$meta.tableName, 
-						reference.$column
+						reference.$item.$meta.columns[reference.$column].name
 					);
 
 					extent = join.extent;
