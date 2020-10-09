@@ -393,7 +393,7 @@ class QueryOrder<TModel extends Entity<TQueryModel>, TQueryModel extends QueryPr
 		sorter: (item: TQueryModel) => any,
 		public direction: "asc" | "dsc"
 	) {
-		const properties = sorter.toString().split("=>")[1].split(".").map(v => v.trim());
+		const properties = sorter.toString().split("=>")[1].split(".").map(v => v.trim()).slice(1);
 
 		this.extent = query.rootExtent;
 		let set = query.set as DbSet<Entity<QueryProxy>, QueryProxy>;
