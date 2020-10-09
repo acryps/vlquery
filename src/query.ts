@@ -197,7 +197,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 			};
 		}
 
-		if (tree.value) {
+		if ("value" in tree) {
 			if (tree.value === null) {
 				this.isNull = true;
 			} else {
@@ -232,19 +232,27 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 						column: component.name,
 						extent
 					};
-				} else if (proxy[name]) {
+				} else if (name in proxy) {
 					// references
 					const reference = proxy[name] as ForeignReference<Entity<QueryProxy>>;
 
-					const join = new QueryJoin(
-						query, 
-						extent, 
-						(new reference.$relation()).$meta.tableName, 
-						reference.$item.$meta.columns[reference.$column].name
-					);
+					if (i == tree.path.length - 1) {
+						// don't create join, just compare source column
+						this.path = {
+							column: reference.$item.$meta.columns[reference.$column].name,
+							extent
+						}
+					} else {
+						const join = new QueryJoin(
+							query, 
+							extent, 
+							(new reference.$relation()).$meta.tableName, 
+							reference.$item.$meta.columns[reference.$column].name
+						);
 
-					extent = join.extent;
-					set = new reference.$relation().$meta.set;
+						extent = join.extent;
+						set = new reference.$relation().$meta.set;
+					}
 				} else {
 					this.path.part = name;
 				}
