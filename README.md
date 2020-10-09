@@ -25,7 +25,7 @@ Now, let's create a vlquery configuration file `vlquery.json` in your projects r
 ```
 
 The vlquery cli will help you create a database context from your existing database. To create and later on update your context, use the following command:
-````
+```
 npx vlquery create-context
 ```
 
