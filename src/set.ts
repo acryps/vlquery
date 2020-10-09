@@ -25,9 +25,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 				${properties.map((p, i) => `$${i + 1}`)}
 			) RETURNING id
 		
-		`, [
-			properties
-		]))[0].id;
+		`, properties.map(p => p.value)))[0].id;
 
 		item.id = id;
 
