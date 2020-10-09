@@ -121,7 +121,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 			SELECT ${this.rootExtent.name}.*${this.includes.map(i => `, ${i.toSQL()}`)}
 			FROM ${this.set.$meta.tableName} AS ${this.rootExtent.name}
 			${this.joins.map(j => j.toSQL()).join("\n")}
-			WHERE ${this.rootExtent.name}._active AND ${this.conditions.map(c => c.toSQL()).join(" AND ")}
+			WHERE ${this.rootExtent.name}._active${this.conditions.length ? " AND " : ""}${this.conditions.map(c => c.toSQL()).join(" AND ")}
 			${this.orders.length ? `ORDER BY ${this.orders.map(order => order.toSQL()).join(", ")}` : ""}
 			${this.limitRows == -1 ? "" : `LIMIT ${new QueryParameter(this, this.limitRows).name}`}
 			${this.skipRows == -1 ? "" : `OFFSET ${new QueryParameter(this, this.skipRows).name}`}
