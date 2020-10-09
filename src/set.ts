@@ -37,7 +37,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	async update(item: TModel) {
 		const properties = this.getStoredProperties(item);
 
-		const id = (await DbClient.query(`
+		await DbClient.query(`
 		
 			UPDATE ${item.$meta.tableName} 
 			SET ${properties.map((p, i) => `${p.name} = $${i + 2}`)}
@@ -46,9 +46,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		`, [
 			item.id,
 			...properties.map(p => p.value)
-		]))[0].id;
-
-		item.id = id;
+		]);
 
 		return item;
 	}
