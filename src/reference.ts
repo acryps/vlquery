@@ -34,14 +34,8 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 		return new Query(itemProxy.$meta.set, [{
 			compare: {
 				operator: "=",
-				left: {
-					path: [
-						itemProxy.$meta.columns[this.$column].name
-					]
-				},
-				right: {
-					value: [this.$item[this.$column]]
-				}
+				left: { path: [ this.$column ] },
+				right: { value: [ this.$item.id ] }
 			}
 		}]) as unknown as Queryable<TSource, TQueryProxy>;
 	}

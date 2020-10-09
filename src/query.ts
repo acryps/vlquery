@@ -111,6 +111,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 		
 			SELECT ${this.rootExtent.name}.*
 			FROM ${this.set.$meta.tableName} AS ${this.rootExtent.name}
+			${this.joins.map(j => j.toSQL()).join("\n")}
 			${this.conditions.length ? `WHERE ${this.conditions.map(c => c.toSQL()).join(" AND ")}` : ""}
 		
 		`;
@@ -118,15 +119,21 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 }
 
 class QueryJoin<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
+	extent: QueryExtent<TModel, TQueryModel>;
+	
 	constructor(
 		public query: Query<TModel, TQueryModel>,
 		public from: QueryExtent<TModel, TQueryModel>,
-		public to: QueryExtent<TModel, TQueryModel>,
+		public table: string,
 		public column: string
-	) {}
+	) {
+		this.extent = new QueryExtent(query);
+
+		this.query.joins.push(this);
+	}
 
 	toSQL() {
-
+		return `INNER JOIN ${this.table} AS ${this.extent.name} ON ${this.from.name}.${this.column} = ${this.extent.name}.id`;
 	}
 }
 
@@ -212,23 +219,29 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 			for (let i = 0; i < tree.path.length; i++) {
 				const name = tree.path[i];
 				const component = set.$meta.columns[name];
+				const proxy = new set.modelConstructor();
 
 				if (component) {
 					// simple attribute
 					this.path = {
 						column: component.name,
-						extent,
-						part: tree.path[i + 1]
+						extent
 					};
-				} else {
+				} else if (proxy[name]) {
 					// references
-					const reference = (new set.modelConstructor())[name] as ForeignReference<Entity<QueryProxy>>;
-					const innerExtent = new QueryExtent(query);
+					const reference = proxy[name] as ForeignReference<Entity<QueryProxy>>;
 
-					query.joins.push(new QueryJoin(query, extent, innerExtent, reference.$column));
+					const join = new QueryJoin(
+						query, 
+						extent, 
+						(new reference.$relation()).$meta.tableName, 
+						reference.$column
+					);
 
-					extent = innerExtent;
+					extent = join.extent;
 					set = new reference.$relation().$meta.set;
+				} else {
+					this.path.part = name;
 				}
 			}
 		}
