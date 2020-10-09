@@ -11,9 +11,11 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	public skipRows = -1;
 	public joins: QueryJoin<TModel, TQueryModel>[] = [];
 	public conditions: QueryFragment<TModel, TQueryModel>[] = [];
-	public rootExtent: QueryExtent<TModel, TQueryModel>;
 	public parameters: QueryParameter<TModel, TQueryModel>[] = [];
 	public orders: QueryOrder<TModel, TQueryModel>[] = [];
+	public includes: QueryInclude<TModel, TQueryModel>[] = [];
+
+	public rootExtent: QueryExtent<TModel, TQueryModel>;
 	public extentIndex = 0;
 
 	static defaultPageSize = 100;
@@ -76,7 +78,9 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	}
 
 	include(selector: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
-		throw new Error("Method not implemented.");
+		this.includes.push(new QueryInclude(this, selector));
+
+		return this;
 	}
 
 	count: Promise<number>;
@@ -421,5 +425,31 @@ class QueryOrder<TModel extends Entity<TQueryModel>, TQueryModel extends QueryPr
 
 	toSQL() {
 		return `${this.extent.name}.${this.column.name} ${this.direction}`;
+	}
+}
+
+class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
+	relation: ForeignReference<TModel>;
+	prefix: string;
+	
+	constructor(
+		public query: Query<TModel, TQueryModel>,
+		selector: (item: TQueryModel) => any
+	) {
+		const proxy = new query.set.modelConstructor();
+
+		this.relation = selector(proxy as unknown as TQueryModel);
+
+		if (!(this.relation instanceof ForeignReference)) {
+			throw new Error(`Invalid include selector '${selector}'`);
+		}
+
+		this.prefix = `inc_${this.query.includes.length}_`;
+	}
+
+	toSQL() {
+		const cols = new this.relation.$relation().$meta.columns;
+
+		return Object.keys(cols).map(key => `${this.query.rootExtent.name}.${cols[key].name} AS ${this.prefix}${cols[key].name}`).join(", ");
 	}
 }

@@ -4,6 +4,8 @@ import { Queryable } from "./queryable";
 import { Query } from ".";
 
 export class ForeignReference<T extends Entity<QueryProxy>> {
+	private $stored;
+	
 	constructor(
 		public $item: Entity<QueryProxy>,
 		public $column?: string,
@@ -15,6 +17,10 @@ export class ForeignReference<T extends Entity<QueryProxy>> {
 	}
 
 	async fetch?() {
+		if (this.$stored) {
+			return this.$stored;
+		}
+
 		const source = new this.$relation();
 		
 		return await source.$meta.set.find(this.id) as T;
@@ -57,7 +63,7 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 	}
 
 	include(selector: (item: TQueryProxy) => any): Queryable<TSource, TQueryProxy> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().include(selector);
 	}
 
 	count: Promise<number>;

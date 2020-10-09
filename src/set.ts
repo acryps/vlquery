@@ -82,7 +82,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	}
 
 	include(selector: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy> {
-		throw new Error("Method not implemented.");
+		return this.toQuery().include(selector);
 	}
 
 	count: Promise<number>;
