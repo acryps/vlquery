@@ -7,7 +7,9 @@ export function createContext() {
 
 	const typeMapping = {
 		text: "string",
-		integer: "string",
+		integer: "number",
+		float: "number",
+		real: "number",
 		uuid: "string",
 		"timestamp without time zone": "Date",
 		"time without time zone": "Date",
