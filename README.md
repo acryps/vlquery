@@ -27,7 +27,7 @@ Let's install the vlquery package
 npm install vlquery --save
 </pre>
 
-Now, let's create a vlquery configuration file `vlquery.json` in your projects root
+Now, let's create a vlquery configuration file `vlconfig.json` in your projects root
 <pre>
 {
 	"context": {
@@ -129,7 +129,7 @@ vlquery supports deactivating rows instead of deleting them.
 References will be checked by the framework.
 Let's demonstrate this feature with a column named `_active`.
 
-First, add the following configuration to `vlquery.json`:
+First, add the following configuration to `vlconfig.json`:
 <pre>
 	"context": {
 		<b>"active": "_active"</b>

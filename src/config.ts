@@ -3,15 +3,15 @@ import path = require("path");
 
 let rootFolder = process.cwd();
 
-while (path.parse(rootFolder).root != rootFolder && !fs.existsSync(`${rootFolder}/vlquery.json`)) {
+while (path.parse(rootFolder).root != rootFolder && !fs.existsSync(`${rootFolder}/vlconfig.json`)) {
 	rootFolder = path.resolve(rootFolder, "..");
 }
 
 if (path.parse(rootFolder).root == rootFolder) {
-	throw new Error(`No vlquery.json configuration found in '${process.cwd()}'!`);
+	throw new Error(`No vlconfig.json configuration found in '${process.cwd()}'!`);
 }
 
-const userConfig = JSON.parse(fs.readFileSync(`${rootFolder}/vlquery.json`).toString());
+const userConfig = JSON.parse(fs.readFileSync(`${rootFolder}/vlconfig.json`).toString());
 
 export const config = {
 	root: rootFolder,
@@ -43,7 +43,7 @@ for (let scanner = 0; scanner < config.compile.scan.length; scanner++) {
 		}
 
 		if (path.parse(tsConfigRootFolder).root == tsConfigRootFolder) {
-			throw new Error(`No tsconfig.json configuration found in '${process.cwd()}' required to resolve '${config.compile.scan[scanner]}' in vlquery.json!`);
+			throw new Error(`No tsconfig.json configuration found in '${process.cwd()}' required to resolve '${config.compile.scan[scanner]}' in vlconfig.json!`);
 		}
 
 		const tsconfig = JSON.parse(fs.readFileSync(`${tsConfigRootFolder}/tsconfig.json`).toString());
