@@ -63,7 +63,7 @@ import { ForeignReference, PrimaryReference } from "vlquery";
 					column_name,
 					data_type
 				FROM INFORMATION_SCHEMA.COLUMNS 
-					WHERE table_name = $1 AND column_name NOT IN ('id', '_active');
+					WHERE table_name = $1${config.context.active ? ` AND column_name NOT IN ('${config.context.active}')`: ""}
 			`, [
 				table
 			])).rows;
@@ -149,12 +149,7 @@ import { ForeignReference, PrimaryReference } from "vlquery";
 
 			console.group("columns");
 
-			const columnMappings = {
-				id: {
-					name: "id",
-					type: "uuid"
-				}
-			};
+			const columnMappings = {};
 
 			for (let column of columns) {
 				const type = typeMapping[column.data_type];
@@ -171,13 +166,15 @@ import { ForeignReference, PrimaryReference } from "vlquery";
 
 				console.log(column.column_name, column.data_type, type);
 
-				body += `${convertToModelName(column.column_name)}: ${type};\n\t`;
-
-				proxyBody += `
+				if (column.column_name != "id") {
+					body += `${convertToModelName(column.column_name)}: ${type};\n\t`;
+					
+					proxyBody += `
 	get ${convertToModelName(column.column_name)}(): ${proxyType} {
 		throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
 	}
 				`;
+				}
 			}
 
 			console.groupEnd();
@@ -193,7 +190,8 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 		columns: ${JSON.stringify(columnMappings)},
 		get set() {
 			return db.${convertToModelName(table)}
-		}
+		},
+		${config.context.active ? `active: ${JSON.stringify(config.context.active)}` : ""}
 	};
 		
 	constructor() {
@@ -213,7 +211,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 
 		context += `
 export class db {
-	${sets.join("\n\t")}
+	${sets.join("\n\t")},
 };
 		`;
 

@@ -1,6 +1,7 @@
 {
 	"context": {
-		"outFile": "db-context.ts"
+		"outFile": "db-context.ts",
+		"active": "_active"
 	},
 	"compile": {
 		"scan": [

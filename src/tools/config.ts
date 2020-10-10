@@ -19,7 +19,8 @@ export const config = {
 	root: rootFolder,
 	context: {
 		outFile: (userConfig.context && userConfig.context.outFile) || "db-context.ts",
-		connection: (userConfig.context && userConfig.context.connection) || {}
+		connection: (userConfig.context && userConfig.context.connection) || {},
+		active: (userConfig.context && userConfig.context.active)
 	},
 	compile: {
 		scan: (userConfig.compile && userConfig.compile.scan) || [

@@ -18,6 +18,15 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	async create(item: TModel) {
 		const properties = this.getStoredProperties(item);
 
+		if (item.$meta.active) {
+			properties.push({
+				key: null,
+				name: item.$meta.active,
+				value: true,
+				type: "boolean"
+			});
+		}
+
 		const id = (await DbClient.query(`
 		
 			INSERT INTO ${item.$meta.tableName} (
@@ -63,15 +72,26 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			}
 		}
 
-		await DbClient.query(`
-		
-			UPDATE ${item.$meta.tableName} 
-			SET _active = false
-			WHERE id = $1
-		
-		`, [
-			item.id
-		]);
+		if (item.$meta.active) {
+			await DbClient.query(`
+			
+				UPDATE ${item.$meta.tableName} 
+				SET _active = false
+				WHERE id = $1
+			
+			`, [
+				item.id
+			]);
+		} else {
+			await DbClient.query(`
+			
+				DELETE FROM ${item.$meta.tableName} 
+				WHERE id = $1
+			
+			`, [
+				item.id
+			]);
+		}
 	}
 
 	private getStoredProperties(item: TModel) {

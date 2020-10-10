@@ -11,7 +11,8 @@ export class Entity<TQueryProxy extends QueryProxy> {
 				type: string
 			}
 		},
-		set: DbSet<Entity<TQueryProxy>, TQueryProxy>
+		set: DbSet<Entity<TQueryProxy>, TQueryProxy>,
+		active?: string
 	};
 
 	// replicate foreign reference property $item
