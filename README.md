@@ -17,6 +17,8 @@ await authorsFirstBookFrom2001.update();
 </pre>
 
 ## Getting started
+[Complete Example Project](https://www.google.com)
+
 Before you can get started with vlquery, create a database on your postgres server.
 We're using a database called "my_project" in this example.
 
@@ -44,7 +46,8 @@ The vlquery cli will help you create a database context from your existing datab
 npx vlquery create-context
 </pre>
 
-The context should be ready now. Use this small example program to get started
+The context should be ready now. If you are using version control, commit it! 
+Use this small example program to get started
 <pre>
 import { db } from "./context";
 import { DbClient } from "vlquery";

@@ -27,7 +27,7 @@ export function createContext() {
 
 	async function main() {
 		await client.connect();
-		console.log("connected");
+		config.compile.verbose && console.log("connected to database");
 
 		function convertToModelName(name: string) {
 			return name.replace(/\_[a-z]/g, m => m[1].toUpperCase());
@@ -56,7 +56,7 @@ import { ForeignReference, PrimaryReference } from "vlquery";
 		let sets = [];
 
 		for (let table of tables.map(t => t.tablename)) {
-			console.group(table);
+			config.compile.verbose && console.group(table);
 
 			const columns = (await client.query(`
 				SELECT 
@@ -87,10 +87,10 @@ import { ForeignReference, PrimaryReference } from "vlquery";
 			let body = ``;
 			let proxyBody = ``;
 
-			console.group("constraints");
+			config.compile.verbose && console.group("constraints");
 
 			for (let constraint of constraints) {
-				console.log(constraint.constraint_name);
+				config.compile.verbose && console.log(constraint.constraint_name);
 
 				const parts = constraint.constraint_name.split("__");
 
@@ -143,11 +143,11 @@ import { ForeignReference, PrimaryReference } from "vlquery";
 				}
 			}
 
-			console.groupEnd();
+			config.compile.verbose && console.groupEnd();
 
 			body += "\n\t";
 
-			console.group("columns");
+			config.compile.verbose && console.group("columns");
 
 			const columnMappings = {};
 
@@ -164,7 +164,7 @@ import { ForeignReference, PrimaryReference } from "vlquery";
 					name: column.column_name
 				};
 
-				console.log(column.column_name, column.data_type, type);
+				config.compile.verbose && console.log(column.column_name, column.data_type, type);
 
 				if (column.column_name != "id") {
 					body += `${convertToModelName(column.column_name)}: ${type};\n\t`;
@@ -177,7 +177,7 @@ import { ForeignReference, PrimaryReference } from "vlquery";
 				}
 			}
 
-			console.groupEnd();
+			config.compile.verbose && console.groupEnd();
 
 			context += `
 export class ${convertToQueryProxyName(table)} extends QueryProxy {
@@ -206,7 +206,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 
 			sets.push(`static ${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)});`);
 
-			console.groupEnd();
+			config.compile.verbose && console.groupEnd();
 		}
 
 		context += `

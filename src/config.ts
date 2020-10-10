@@ -4,8 +4,6 @@ import path = require("path");
 let rootFolder = process.cwd();
 
 while (path.parse(rootFolder).root != rootFolder && !fs.existsSync(`${rootFolder}/vlquery.json`)) {
-	console.log(rootFolder);
-
 	rootFolder = path.resolve(rootFolder, "..");
 }
 
