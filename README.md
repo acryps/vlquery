@@ -1,6 +1,20 @@
 # vlquery TypeScript ORM
 Simple to use TypeScript-Based ORM for postgres.
 
+Here a little example:
+<pre>
+const books = await db.book
+	.where(book => book.author.firstname == "Jan")
+	.orderByAscending(book => book.title)
+	.toArray();
+
+const author = await db.person.find("&lt;a very long uuid&gt;");
+const authorsFirstBookFrom2001 = await author.books.first(book => book.publishedAt.year == 2001);
+
+authorsFirstBookFrom2001.title = "A new title";
+await authorsFirstBookFrom2001.update();
+</pre>
+
 ## Getting started
 Before you can get started with vlquery, create a database on your postgres server.
 We're using a database called "my_project" in this example.
@@ -169,7 +183,7 @@ Relations in entities can be resolved like this:
 const book = await db.book.find("&lt;uuid&gt;");
 const author = <b>await</b> book.author.<b>fetch()</b>;
 
-const authorsBooks = await author.books.toArray();
+const authorsBooks = <b>await</b> author<b>.books.toArray()</b>;
 
 const authorsBooksFrom2001 = await author.books
 	.where(book => book.publishedAt.year == 2001) // add a condition
@@ -192,3 +206,59 @@ for (let book of books) {
 	const author = await book.author.fetch(); // this will resolve instantly
 }
 </pre>
+
+### Limit, skip and pageing
+The bigger your database gets, the more important this will be.
+<pre>
+const books = await db.book.limit(3).skip(1).toArray();
+
+const booksOnPage3 = await db.book.page(3).toArray(); // 0 = first page
+const books51to100 = await db.book.page(1, 50).toArray();
+</pre>
+
+You can set the default page size by setting
+<pre>
+Qurey.defaultPageSize = 120;
+</pre>
+
+## Updating data
+vlquery can save your data too!
+
+### Creating records
+Let's create a simple book with a refrence to its author
+<pre>
+const author = await db.author.find("&lt;uuid&gt;");
+
+const book = new Book();
+book.title = "My First Book!";
+book.author = author;
+
+await book.create();
+</pre>
+
+Alternatively to using `.author` you could do this:
+
+<pre>
+book.authorId = "&lt;uuid&gt;";
+</pre>
+
+vlquery will add the new id of your record to it, so after calling create, you'll be able to use the new id!
+
+### Updating existing records
+Whenever your data need some refreshing, do this:
+<pre>
+const book = await db.book.find("&lt;uuid&gt;");
+book.title = "New Title";
+
+await book.update();
+</pre>
+
+### Deleting a record
+When your data is no longer required, it can be deleted with this code.
+vlquery will check all references before you can delete the item!
+<pre>
+const book = await db.book.find("&lt;uuid&gt;");
+await book.delete();
+</pre>
+
+If you are using an active column, this will only deactivate the row!

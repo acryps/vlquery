@@ -1,6 +1,6 @@
 import { Client } from "pg";
 import * as fs from "fs";
-import { config } from "./config";
+import { config } from "../config";
 
 export function createContext() {
 	const client = new Client(config.context.connection);

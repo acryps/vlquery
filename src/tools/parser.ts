@@ -1,6 +1,6 @@
 import fs = require("fs");
 import esprima = require("esprima");
-import { config } from "./config";
+import { config } from "../config";
 
 export function compileQueries() {
 	function compile(path: string) {

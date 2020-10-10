@@ -58,7 +58,11 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	}
 
 	async single(query?: (item: TQueryModel) => any): Promise<TModel> {
-		const res = await this.where(query).limit(2).toArray();
+		if (query) {
+			this.where(query);
+		}
+
+		const res = await this.limit(2).toArray();
 
 		if (res.length != 1) {
 			throw new Error(`Single query returned ${res.length == 0 ? "no" : "multiple"} items`);

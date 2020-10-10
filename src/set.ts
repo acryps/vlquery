@@ -43,6 +43,10 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	}
 
 	async update(item: TModel) {
+		if (!item.id) {
+			throw new Error(`Cannot update entity, an id is required!`);
+		}
+
 		const properties = this.getStoredProperties(item);
 
 		await DbClient.query(`
