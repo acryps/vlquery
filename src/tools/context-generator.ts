@@ -211,7 +211,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 
 		context += `
 export class db {
-	${sets.join("\n\t")},
+	${sets.join("\n\t")}
 };
 		`;
 

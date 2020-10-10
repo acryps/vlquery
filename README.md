@@ -9,7 +9,8 @@ const books = await db.book
 	.toArray();
 
 const author = await db.person.find("&lt;a very long uuid&gt;");
-const authorsFirstBookFrom2001 = await author.books.first(book => book.publishedAt.year == 2001);
+const authorsFirstBookFrom2001 = await author.books
+	.first(book => book.publishedAt.year == 2001);
 
 authorsFirstBookFrom2001.title = "A new title";
 await authorsFirstBookFrom2001.update();
