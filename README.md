@@ -1,7 +1,7 @@
 # vlquery TypeScript ORM
 Simple to use TypeScript-Based ORM for postgres.
 
-## Getting started
+## Getting started
 Before you can get started with vlquery, create a database on your postgres server.
 We're using a database called "my_project" in this example.
 
