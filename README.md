@@ -17,7 +17,7 @@ await authorsFirstBookFrom2001.update();
 </pre>
 
 ## Getting started
-[Complete Example Project](https://www.google.com)
+[Complete Example Project](https://github.com/levvij/vlquery-example)
 
 Before you can get started with vlquery, create a database on your postgres server.
 We're using a database called "my_project" in this example.
