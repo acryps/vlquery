@@ -63,7 +63,7 @@ You're good to go!
 
 Every entity requires an `id` column of type `uuid`. You can use an integer, but it will be treated as a string.
 
-### Naming
+### Naming
 Postgres does not support uppercase letters in table and column names.
 Use a `_` in a column or table name to make the next letter upper case in your models
 <pre>
@@ -108,6 +108,7 @@ You can use `_` in a references name to make it uppercase in the context
 
 ### Deactivate instead of delete
 vlquery supports deactivating rows instead of deleting them. 
+References will be checked by the framework.
 Let's demonstrate this feature with a column named `_active`.
 
 First, add the following configuration to `vlquery.json`:
@@ -127,4 +128,67 @@ CREATE TABLE book (
 
 	...
 );
+</pre>
+
+## Getting and filtering data
+You can get data from the database using the `db` variable
+
+<pre>
+const book = await db.book.find("&lt;uuid&gt;");
+const books = await db.book.toArray();
+const authorCount = await db.authr.count;
+</pre>
+
+### Conditions
+Throw in some conditions to filter the data
+
+<pre>
+const books = await db.book
+	.where(book => book.title == "Test")
+	.toArray();
+
+// this will automatically join the author table and compare the value in there
+const alicesBook = await db.book.first(book => book.author.firstname == "Alice");
+
+// will fail if none or multiple items are found
+const book = await db.book.single(book => book.title == "A Book");
+</pre>
+
+### Putting everyting into order
+postgres can be very funny when it comes to the order of records in a table, so to make sure everyting is ordered properly, use the order by methods.
+<pre>
+const books = await db.book
+	.orderByAscending(book => book.author.lastname)
+	.orderByAscending(book => book.title)
+	.toArray();
+</pre>
+
+### Resolving references
+Relations in entities can be resolved like this:
+<pre>
+const book = await db.book.find("&lt;uuid&gt;");
+const author = <b>await</b> book.author.<b>fetch()</b>;
+
+const authorsBooks = await author.books.toArray();
+
+const authorsBooksFrom2001 = await author.books
+	.where(book => book.publishedAt.year == 2001) // add a condition
+	.orderByAscending(book => book.title) // and an order
+	.toArray();
+</pre>
+
+vlquery was designed to be as simple to use as Microsofts EntityFramework. 
+Everybody who used Entity in a big project had to deal with the big implications that come with inexplicit lazy loading, thus we never implemented it into the framework. 
+Every database access requires an await and thus reduces the chances of introducing performance issues.
+If you want to prefetch certain items to improve performance, you can do it like this.
+The `fetch`-call is still required!
+
+<pre>
+const books = await db.book
+	<b>.include(book => book.author)</b> // preload authors
+	.toArray();
+
+for (let book of books) {
+	const author = await book.author.fetch(); // this will resolve instantly
+}
 </pre>
