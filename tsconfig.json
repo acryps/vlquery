@@ -10,9 +10,5 @@
         "lib": [
 			"esnext"
         ]
-	},
-	"include": [
-		"**/*",
-		"../config"
-	]
+	}
 }
