@@ -1,7 +1,7 @@
 # vlquery TypeScript ORM
-Simple to use TypeScript-Based ORM for postgres.
+Simple to use TypeScript based database first ORM for postgres.
 
-Here a little example:
+Here is a little example:
 <pre>
 const books = await db.book
 	.where(book => book.author.firstname == "Jan")
