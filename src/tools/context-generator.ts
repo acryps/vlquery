@@ -8,6 +8,7 @@ export function createContext() {
 	const typeMapping = {
 		text: "string",
 		integer: "number",
+		boolean: "boolean",
 		float: "number",
 		real: "number",
 		uuid: "string",
@@ -19,6 +20,7 @@ export function createContext() {
 	const proxyTypeMapping = {
 		text: "QueryString",
 		integer: "QueryNumber",
+		boolean: "QueryBoolean",
 		uuid: "QueryString",
 		"timestamp without time zone": "QueryTimeStamp",
 		"time without time zone": "QueryTime",
