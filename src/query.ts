@@ -10,10 +10,12 @@ import { QueryParameter } from "./query-operators/parameter";
 import { CompiledQuery } from "./compiled-query";
 import { QueryOrder } from "./query-operators/order";
 import { QueryInclude } from "./query-operators/include";
+import { ForeignReference } from ".";
 
 export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> implements Queryable<TModel, TQueryModel> {
 	public limitRows = -1;
 	public skipRows = -1;
+	public selectClause = "";
 	public joins: QueryJoin<TModel, TQueryModel>[] = [];
 	public conditions: QueryFragment<TModel, TQueryModel>[] = [];
 	public parameters: QueryParameter<TModel, TQueryModel>[] = [];
@@ -29,13 +31,15 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	constructor(public set: DbSet<TModel, TQueryModel>, preConditions?: CompiledQuery[]) {
 		this.rootExtent = new QueryExtent(this);
 
+		this.selectClause = `${this.rootExtent.name}.*`;
+
 		if (preConditions) {
 			for (let condition of preConditions) {
 				this.where(condition as unknown as (item: TQueryModel) => any);
 			}
 		}
 	}
-
+	
 	where(query: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
 		// ensure compiled query
 		if (typeof query == "function") {
@@ -77,6 +81,25 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 
 	async toArray(): Promise<TModel[]> {
 		return (await this.toArrayRaw()).map(raw => this.set.constructObject(raw, this.includes));
+	}
+
+	select(properties: string[]): Queryable<TModel, TQueryModel> {
+		const select = [];
+		const proxy = new this.set.modelConstructor();
+
+		for (let property of properties) {
+			if (this.set.$meta[property]) {
+				select.push(this.set.$meta[property].name);
+			} else if (proxy[property] instanceof ForeignReference) {
+				this.include(() => proxy[property]);
+
+				select.push(this.set.$meta[proxy[property].$column].name);
+			}
+		}
+
+		this.selectClause = select.map(s => `${this.rootExtent.name}.${select}`).join(", ");
+
+		return this;
 	}
 
 	include(selector: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
@@ -130,7 +153,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 
 		return `
 		
-			SELECT ${this.onlyCount ? `COUNT(${this.rootExtent.name}) AS count` : `${this.rootExtent.name}.*${this.includes.map(i => `, ${i.toSQL()}`)}`}
+			SELECT ${this.onlyCount ? `COUNT(${this.rootExtent.name}) AS count` : `${this.selectClause}${this.includes.map(i => `, ${i.toSQL()}`)}`}
 			FROM ${this.set.$meta.tableName} AS ${this.rootExtent.name}
 			${this.joins.map(j => j.toSQL()).join("\n")}
 			${wheres.length ? `WHERE ${wheres.join(" AND ")}` : ""}

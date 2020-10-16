@@ -150,6 +150,10 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return this.toQuery().include(selector);
 	}
 
+	select(properties: string[]): Queryable<TModel, TQueryProxy> {
+		return this.toQuery().select(properties);
+	}
+
 	get count(): Promise<number> {
 		return this.toQuery().count;
 	}

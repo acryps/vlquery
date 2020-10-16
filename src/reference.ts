@@ -66,6 +66,10 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 		return this.toQuery().include(selector);
 	}
 
+	select(properties: string[]): Queryable<TSource, TQueryProxy> {
+		return this.toQuery().select(properties);
+	}
+
 	get count(): Promise<number> {
 		return this.toQuery().count;
 	}
