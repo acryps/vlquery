@@ -211,7 +211,7 @@ for (let book of books) {
 }
 </pre>
 
-### Limit, skip and pageing
+### Limit, skip and paging
 The bigger your database gets, the more important this will be.
 <pre>
 const books = await db.book.limit(3).skip(1).toArray();
