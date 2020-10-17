@@ -211,7 +211,7 @@ for (let book of books) {
 }
 </pre>
 
-### Limit, skip and pageing
+### Limit, skip and pageing
 The bigger your database gets, the more important this will be.
 <pre>
 const books = await db.book.limit(3).skip(1).toArray();
@@ -225,10 +225,10 @@ You can set the default page size by setting
 Qurey.defaultPageSize = 120;
 </pre>
 
-## Updating data
+## Updating data
 vlquery can save your data too!
 
-### Creating records
+### Creating records
 Let's create a simple book with a refrence to its author
 <pre>
 const author = await db.author.find("&lt;uuid&gt;");
@@ -248,7 +248,7 @@ book.authorId = "&lt;uuid&gt;";
 
 vlquery will add the new id of your record to it, so after calling create, you'll be able to use the new id!
 
-### Updating existing records
+### Updating existing records
 Whenever your data need some refreshing, do this:
 <pre>
 const book = await db.book.find("&lt;uuid&gt;");
