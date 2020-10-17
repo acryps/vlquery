@@ -12,24 +12,21 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 
 	constructor(
 		public query: Query<TModel, TQueryModel>,
-		selector: (item: TQueryModel) => any
+		selectorOrTree: ((item: TQueryModel) => any) | any
 	) {
-		const proxy = new query.set.modelConstructor();
+		if (typeof selectorOrTree == "function") {
+			const proxy = new query.set.modelConstructor();
 
-		this.relation = selector(proxy as unknown as TQueryModel);
+			const parts = selectorOrTree.toString().split("=>");
+			const itemParameter = parts[0].trim().replace(/\(|\)/g, "");
+			const path = parts[1].replace(`${itemParameter}.`, "").trim().split(".");
 
-		this.extent = new QueryJoin(
-			query,
-			query.rootExtent,
-			new this.relation.$relation().$meta.tableName,
-			this.relation.$item.$meta.columns[this.relation.$column].name
-		).extent;
+			const tree = {};
 
-		if (!(this.relation instanceof ForeignReference)) {
-			throw new Error(`Invalid include selector '${selector}'`);
+			return new QueryInclude<TModel, TQueryModel>(query, tree);
+		} else {
+			query.fetchTree = selectorOrTree;
 		}
-
-		this.prefix = `inc${this.query.includes.length}_`;
 	}
 
 	toSQL() {

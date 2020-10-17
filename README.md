@@ -266,3 +266,102 @@ await book.delete();
 </pre>
 
 If you are using an active column, this will only deactivate the row!
+
+# Performance and Query Building
+A common problem with ORMs is the performance. 
+We try to improve every aspect of the query fetching focusing on reducing data consumption and speed.
+
+Tests showed us that
+```
+SELECT book.title, person.firstname, person.lastname
+FROM book 
+INNER JOIN person ON person.id = book.author_id
+```
+
+is around 6% slower compared to
+
+```
+SELECT json_build_object(
+	'title', book.title,
+	'firstname', person.firstname,
+	'lastname', person.lastname	
+)
+FROM book
+INNER JOIN person ON person.id = book.author_id
+```
+
+We can get another 3% faster (local db, even bigger improvements for remote databases) by compressing the names.
+
+```
+SELECT json_build_object(
+	'a', a.title,
+	'b', b.firstname,
+	'c', b.lastname	
+) AS a
+FROM book AS a
+INNER JOIN person AS b ON b.id = a.author_id
+```
+
+`include` calls are required to improve the performance.
+Let's demonstrate the power of includes (using a include tree in this example):
+
+```
+await db.book.include({
+	"title": 1,
+	"author": {
+		"firstname": 1,
+		"lastname": 1
+	},
+	"reviews": {
+		"title": 1,
+		"reviewer": {
+			"firstname": 1,
+			"lastname": 1,
+			"books": {
+				"title": 1
+			}
+		}
+	}
+}).toArray();
+```
+
+This will create the following SQL-Query (without name compression)
+```
+SELECT json_build_object(
+	'title', book.title,
+	'author_firstname', author.firstname,
+	'author_lastname', author.lastname,
+	'reviews', reviews._
+)
+FROM book 
+	INNER JOIN person AS author ON book.author_id = author.id
+	LEFT OUTER JOIN (
+	
+		SELECT review.book_id,
+			json_agg(
+				json_build_object(
+					'review_title', review.title,
+					'reviewer_id', reviewer.id,
+					'reviewer_firstname', reviewer.firstname,
+					'reviewer_lastname', reviewer.lastname,
+					'reviewer_books', inner_books._
+				)
+			) AS _
+		FROM review
+			INNER JOIN person AS reviewer ON reviewer.id = review.reviewer_id
+			LEFT JOIN (
+			
+				SELECT inner_book.author_id,
+					json_agg(
+						json_build_object(
+							'title', inner_book.title
+						)
+					) AS _
+				FROM book AS inner_book
+				GROUP BY inner_book.author_id
+				
+			) AS inner_books ON reviewer.id = inner_books.author_id
+		GROUP BY review.book_id
+		
+	) AS reviews ON reviews.book_id = book.id
+```

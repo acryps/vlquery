@@ -15,23 +15,26 @@ import { ForeignReference } from ".";
 export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> implements Queryable<TModel, TQueryModel> {
 	public limitRows = -1;
 	public skipRows = -1;
-	public selectClause = "";
 	public joins: QueryJoin<TModel, TQueryModel>[] = [];
 	public conditions: QueryFragment<TModel, TQueryModel>[] = [];
 	public parameters: QueryParameter<TModel, TQueryModel>[] = [];
 	public orders: QueryOrder<TModel, TQueryModel>[] = [];
 	public includes: QueryInclude<TModel, TQueryModel>[] = [];
 	public onlyCount: boolean;
-
 	public rootExtent: QueryExtent<TModel, TQueryModel>;
 	public extentIndex = 0;
+	public fetchTree: any;
 
 	static defaultPageSize = 100;
 	
 	constructor(public set: DbSet<TModel, TQueryModel>, preConditions?: CompiledQuery[]) {
 		this.rootExtent = new QueryExtent(this);
 
-		this.selectClause = `${this.rootExtent.name}.*`;
+		this.fetchTree = {};
+
+		for (let column in set.$meta.columns) {
+			this.fetchTree[column] = true;
+		}
 
 		if (preConditions) {
 			for (let condition of preConditions) {
@@ -83,26 +86,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 		return (await this.toArrayRaw()).map(raw => this.set.constructObject(raw, this.includes));
 	}
 
-	select(properties: string[]): Queryable<TModel, TQueryModel> {
-		const select = [];
-		const proxy = new this.set.modelConstructor();
-
-		for (let property of properties) {
-			if (this.set.$meta[property]) {
-				select.push(this.set.$meta[property].name);
-			} else if (proxy[property] instanceof ForeignReference) {
-				this.include(() => proxy[property]);
-
-				select.push(this.set.$meta[proxy[property].$column].name);
-			}
-		}
-
-		this.selectClause = select.map(s => `${this.rootExtent.name}.${select}`).join(", ");
-
-		return this;
-	}
-
-	include(selector: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
+	include(selector: ((item: TQueryModel) => any) | any): Queryable<TModel, TQueryModel> {
 		this.includes.push(new QueryInclude(this, selector));
 
 		return this;
@@ -151,9 +135,17 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 			wheres.unshift(`${this.rootExtent.name}.${this.set.$meta.active}`);
 		}
 
+		let select;
+
+		if (this.onlyCount) {
+			select = `COUNT(${this.rootExtent.name}) AS count`;
+		} else {
+			select = `${this.rootExtent.name}.*`;
+		}
+
 		return `
 		
-			SELECT ${this.onlyCount ? `COUNT(${this.rootExtent.name}) AS count` : `${this.selectClause}${this.includes.map(i => `, ${i.toSQL()}`)}`}
+			SELECT ${select}
 			FROM ${this.set.$meta.tableName} AS ${this.rootExtent.name}
 			${this.joins.map(j => j.toSQL()).join("\n")}
 			${wheres.length ? `WHERE ${wheres.join(" AND ")}` : ""}
