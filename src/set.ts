@@ -146,12 +146,8 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return this.toQuery().toArray();
 	}
 
-	include(selector: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy> {
+	include(selector: ((item: TQueryProxy) => any) | any): Queryable<TModel, TQueryProxy> {
 		return this.toQuery().include(selector);
-	}
-
-	select(properties: string[]): Queryable<TModel, TQueryProxy> {
-		return this.toQuery().select(properties);
 	}
 
 	get count(): Promise<number> {
