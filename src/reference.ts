@@ -25,15 +25,21 @@ export class ForeignReference<T extends Entity<QueryProxy>> {
 		
 		return await source.$meta.set.find(this.id) as T;
 	}
+
+	get hasPrefetched() {
+		return !!this.$stored;
+	}
 }
 
 export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TSource, TQueryProxy> {
+	private $stored;
+	
 	constructor(
 		public $item: Entity<QueryProxy>,
 		public $column: string,
 		public $relation: new () => TSource
 	) {}
-
+	
 	private toQuery() {
 		const itemProxy = new this.$relation();
 
@@ -44,6 +50,14 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 				right: { value: this.$item.id }
 			}
 		}]) as unknown as Queryable<TSource, TQueryProxy>;
+	}
+
+	get hasPrefetched() {
+		return !!this.$stored;
+	}
+
+	map(mapper: (item: TSource) => any): Queryable<TSource, TQueryProxy> {
+		return this.toQuery().map(mapper);
 	}
 
 	where(query: (item: TQueryProxy) => any): Queryable<TSource, TQueryProxy> {
@@ -59,6 +73,11 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 	}
 
 	async toArray(): Promise<TSource[]> {
+		// return prefetched result if there is one
+		if (this.$stored) {
+			return this.$stored;
+		}
+
 		return await this.toQuery().toArray();
 	}
 
@@ -67,6 +86,20 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 	}
 
 	includeTree(tree: any): Queryable<TSource, TQueryProxy> {
+		if (typeof tree != "function" && this.hasPrefetched) {
+			// check if the whole tree has already been fetched
+			if (this.isPrefetched(tree, this.$stored)) {
+				// fake toArray-Method to return stored value
+				const query = this.toQuery();
+
+				query.toArray = () => {
+					return this.$stored;
+				};
+
+				return query;
+			}
+		}
+
 		return this.toQuery().includeTree(tree);
 	}
 
@@ -92,5 +125,36 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 
 	page(index: number, size?: number): Queryable<TSource, TQueryProxy> {
 		return this.toQuery().page(index, size);
+	}
+
+	private isPrefetched(tree, leaf) {
+		let node = leaf;
+
+		if (Array.isArray(leaf)) {
+			if (leaf.length == 0) {
+				return true;
+			}
+
+			node = leaf[0];
+		}
+
+		for (let key in tree) {
+			// resolve references
+			if (typeof tree[key] == "object") {
+				if (node[key] && node[key].$stored) {
+					if (!this.isPrefetched(tree[key], node[key].$stored)) {
+						return false;
+					}
+				} else {
+					return false;
+				}
+			} else {
+				if (!(key in node)) {
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 }

@@ -23,6 +23,8 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 
 			const tree = {};
 
+			// TODO add include
+
 			return new QueryInclude<TModel, TQueryModel>(query, tree);
 		} else {
 			this.fetchTree = selectorOrTree;
@@ -34,8 +36,6 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 		const proxy = new set.modelConstructor();
 
 		for (let property in leaf) {
-			console.group(property);
-
 			if (set.$meta.columns[property]) {
 				const col = set.$meta.columns[property];
 
@@ -95,8 +95,6 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 
 				indent.childIndents.push(group);
 			}
-
-			console.groupEnd();
 		}
 
 		return indent;

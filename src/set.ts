@@ -11,7 +11,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	constructor(
 		public modelConstructor: new () => TModel
 	) {}
-
+	
 	get $meta() {
 		return new this.modelConstructor().$meta;
 	}
@@ -131,6 +131,10 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return new Query(this);
 	}
 	
+	map(mapper: (item: TModel) => any): Queryable<TModel, TQueryProxy> {
+		return this.toQuery().map(mapper);
+	}
+
 	where(query: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy> {
 		return this.toQuery().where(query);
 	}
@@ -179,32 +183,51 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return this.toQuery().page(index, size);
 	}
 
-	constructObject(raw: any, columnMappings: QueryColumnMapping<TModel, TQueryProxy>[]) {
+	constructObject(raw: any, columnMappings: QueryColumnMapping<TModel, TQueryProxy>[], path: string[]) {
 		const model = new this.modelConstructor();
 
+		const columns = columnMappings.filter(
+			c => c.path.length == path.length + 1 && !c.path.slice(0, c.path.length - 1).find((e, i) => path[i] != e)
+		);
+
 		for (let col in model.$meta.columns) {
-			if (col in raw) {
-				model[col] = raw[model.$meta.columns[col].name];
+			const map = columns.find(c => c.lastComponent == col);
+
+			if (map) {
+				model[col] = raw[map.name];
 			}
 		}
 
-		/*for (let include of includes) {
-			for (let key in model) {
-				const col = model[key];
+		for (let key in model) {
+			const relation = model[key];
 
-				if (col instanceof ForeignReference && col.$column == include.relation.$column) {
-					const innerRaw = {};
+			if (relation instanceof ForeignReference && columnMappings.find(m => m.path[path.length] == key.replace("$", ""))) {
+				// construct prefetched item
+				const child = (new relation.$relation().$meta.set).constructObject(raw, columnMappings, [
+					...path, 
+					key.replace("$", "")
+				]);
 
-					for (let key in raw) {
-						if (key.startsWith(include.prefix)) {
-							innerRaw[key.replace(include.prefix, "")] = raw[key];
-						}
-					}
-
-					col["$stored"] = new include.relation.$relation().$meta.set.constructObject(innerRaw, []);
-				}
+				// store prefetched item into private $stored variable
+				// you should NEVER access this variable
+				// use .fetch() instead!
+				relation["$stored"] = child;
 			}
-		}*/
+
+			if (relation instanceof PrimaryReference && key in raw) {
+				const set = (new relation.$relation()).$meta.set;
+
+				const items = raw[key].map(item => set.constructObject(item, columnMappings, [
+					...path,
+					key
+				]));
+
+				// store prefetched result in private $stored variable
+				// you should NEVER access this variable
+				// use .fetch() instead!
+				relation["$stored"] = items;
+			}
+		}
 
 		return model;
 	}

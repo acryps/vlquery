@@ -302,7 +302,7 @@ FROM book AS a
 INNER JOIN person AS b ON b.id = a.author_id
 ```
 
-`include` calls are required to improve the performance.
+`includeTree` calls are required to improve the performance.
 Let's demonstrate the power of includes (using a include tree in this example):
 
 ```
@@ -325,43 +325,36 @@ await db.book.includeTree({
 }).toArray();
 ```
 
-This will create the following SQL-Query (without name compression)
+This will create the following SQL-Query (expanded for readability)
 ```
 SELECT json_build_object(
-	'title', book.title,
-	'author_firstname', author.firstname,
-	'author_lastname', author.lastname,
-	'reviews', reviews._
-)
-FROM book 
-	INNER JOIN person AS author ON book.author_id = author.id
-	LEFT OUTER JOIN (
-	
-		SELECT review.book_id,
-			json_agg(
-				json_build_object(
-					'review_title', review.title,
-					'reviewer_id', reviewer.id,
-					'reviewer_firstname', reviewer.firstname,
-					'reviewer_lastname', reviewer.lastname,
-					'reviewer_books', inner_books._
-				)
-			) AS _
-		FROM review
-			INNER JOIN person AS reviewer ON reviewer.id = review.reviewer_id
-			LEFT JOIN (
-			
-				SELECT inner_book.author_id,
-					json_agg(
-						json_build_object(
-							'title', inner_book.title
-						)
-					) AS _
-				FROM book AS inner_book
-				GROUP BY inner_book.author_id
-				
-			) AS inner_books ON reviewer.id = inner_books.author_id
-		GROUP BY review.book_id
-		
-	) AS reviews ON reviews.book_id = book.id
+	'0', ext1.firstname, 
+	'1', ext1.lastname, 
+	'2', ext1.id, 
+	'9', ext0.title, 
+	'a', ext0.published_at, 
+	'b', ext0.id, 
+	'reviews', ext2._
+) AS _ 
+FROM book AS ext0 
+	INNER JOIN person AS ext1 ON ext0.author_id = ext1.id 
+	LEFT JOIN ( 
+		SELECT ext3.book_id, json_agg(json_build_object(
+			'5', ext4.firstname, 
+			'6', ext4.lastname, 
+			'7', ext3.title, 
+			'8', ext3.id, 
+			'books', ext5._
+		)) AS _ 
+		FROM review AS ext3 
+			INNER JOIN person AS ext4 ON ext3.reviewer_id = ext4.id 
+			LEFT JOIN ( 
+				SELECT ext6.author_id, json_agg(json_build_object(
+					'3', ext6.title, 
+					'4', ext6.id
+				)) AS _ FROM book AS ext6 
+			GROUP BY ext6.author_id 
+		) AS ext5 ON ext4.id = ext5.author_id 
+		GROUP BY ext3.book_id 
+	) AS ext2 ON ext0.id = ext2.book_id
 ```

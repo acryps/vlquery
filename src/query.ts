@@ -24,6 +24,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	public rootExtent: QueryExtent<TModel, TQueryModel>;
 	public extentIndex = 0;
 	public columnMappings: QueryColumnMapping<TModel, TQueryModel>[] = [];
+	public mapper;
 
 	static defaultPageSize = 100;
 	
@@ -35,6 +36,12 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 				this.where(condition as unknown as (item: TQueryModel) => any);
 			}
 		}
+	}
+	
+	map(mapper: (item: TModel) => any): Queryable<TModel, TQueryModel> {
+		this.mapper = mapper;
+
+		return this;
 	}
 	
 	where(query: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
@@ -77,7 +84,13 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	}
 
 	async toArray(): Promise<TModel[]> {
-		return (await this.toArrayRaw()).map(raw => this.set.constructObject(raw, this.columnMappings));
+		const data = (await this.toArrayRaw()).map(raw => this.set.constructObject(raw._, this.columnMappings, []));
+
+		if (this.mapper) {
+			return data.map((c, i, a) => this.mapper(c, i, a));
+		}
+
+		return data;
 	}
 
 	include(selector: (item: TModel) => any): Queryable<TModel, TQueryModel> {
