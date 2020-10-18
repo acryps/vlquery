@@ -306,7 +306,7 @@ INNER JOIN person AS b ON b.id = a.author_id
 Let's demonstrate the power of includes (using a include tree in this example):
 
 ```
-await db.book.include({
+await db.book.includeTree({
 	"title": 1,
 	"author": {
 		"firstname": 1,

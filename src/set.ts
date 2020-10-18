@@ -5,6 +5,7 @@ import { QueryProxy } from "./query-proxy";
 import { Query } from "./query";
 import { QueryInclude } from "./query-operators/include";
 import { ForeignReference, PrimaryReference } from ".";
+import { QueryColumnMapping } from "./query-operators/column-map";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	constructor(
@@ -146,8 +147,12 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return this.toQuery().toArray();
 	}
 
-	include(selector: ((item: TQueryProxy) => any) | any): Queryable<TModel, TQueryProxy> {
+	include(selector: (item: TModel) => any): Queryable<TModel, TQueryProxy> {
 		return this.toQuery().include(selector);
+	}
+
+	includeTree(tree: any): Queryable<TModel, TQueryProxy> {
+		return this.toQuery().includeTree(tree);
 	}
 
 	get count(): Promise<number> {
@@ -174,14 +179,16 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return this.toQuery().page(index, size);
 	}
 
-	constructObject(raw: any, includes: QueryInclude<TModel, TQueryProxy>[]) {
+	constructObject(raw: any, columnMappings: QueryColumnMapping<TModel, TQueryProxy>[]) {
 		const model = new this.modelConstructor();
 
 		for (let col in model.$meta.columns) {
-			model[col] = raw[model.$meta.columns[col].name];
+			if (col in raw) {
+				model[col] = raw[model.$meta.columns[col].name];
+			}
 		}
 
-		for (let include of includes) {
+		/*for (let include of includes) {
 			for (let key in model) {
 				const col = model[key];
 
@@ -197,7 +204,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 					col["$stored"] = new include.relation.$relation().$meta.set.constructObject(innerRaw, []);
 				}
 			}
-		}
+		}*/
 
 		return model;
 	}

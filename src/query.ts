@@ -10,7 +10,7 @@ import { QueryParameter } from "./query-operators/parameter";
 import { CompiledQuery } from "./compiled-query";
 import { QueryOrder } from "./query-operators/order";
 import { QueryInclude } from "./query-operators/include";
-import { ForeignReference } from ".";
+import { QueryColumnMapping } from "./query-operators/column-map";
 
 export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> implements Queryable<TModel, TQueryModel> {
 	public limitRows = -1;
@@ -19,22 +19,16 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	public conditions: QueryFragment<TModel, TQueryModel>[] = [];
 	public parameters: QueryParameter<TModel, TQueryModel>[] = [];
 	public orders: QueryOrder<TModel, TQueryModel>[] = [];
-	public includes: QueryInclude<TModel, TQueryModel>[] = [];
+	public includeClause: QueryInclude<TModel, TQueryModel>;
 	public onlyCount: boolean;
 	public rootExtent: QueryExtent<TModel, TQueryModel>;
 	public extentIndex = 0;
-	public fetchTree: any;
+	public columnMappings: QueryColumnMapping<TModel, TQueryModel>[] = [];
 
 	static defaultPageSize = 100;
 	
 	constructor(public set: DbSet<TModel, TQueryModel>, preConditions?: CompiledQuery[]) {
 		this.rootExtent = new QueryExtent(this);
-
-		this.fetchTree = {};
-
-		for (let column in set.$meta.columns) {
-			this.fetchTree[column] = true;
-		}
 
 		if (preConditions) {
 			for (let condition of preConditions) {
@@ -83,11 +77,17 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	}
 
 	async toArray(): Promise<TModel[]> {
-		return (await this.toArrayRaw()).map(raw => this.set.constructObject(raw, this.includes));
+		return (await this.toArrayRaw()).map(raw => this.set.constructObject(raw, this.columnMappings));
 	}
 
-	include(selector: ((item: TQueryModel) => any) | any): Queryable<TModel, TQueryModel> {
-		this.includes.push(new QueryInclude(this, selector));
+	include(selector: (item: TModel) => any): Queryable<TModel, TQueryModel> {
+		this.includeClause = new QueryInclude(this, selector);
+
+		return this;
+	}
+
+	includeTree(tree: any): Queryable<TModel, TQueryModel> {
+		this.includeClause = new QueryInclude(this, tree);
 
 		return this;
 	}
@@ -140,19 +140,33 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 		if (this.onlyCount) {
 			select = `COUNT(${this.rootExtent.name}) AS count`;
 		} else {
-			select = `${this.rootExtent.name}.*`;
+			if (!this.includeClause) {
+				const tree = {};
+
+				for (let column in this.set.$meta.columns) {
+					tree[column] = true;
+				}
+
+				this.includeTree(tree);
+			}
+
+			this.includeClause.buildMap();
+
+			select = `${this.includeClause.toSelectSQL()} AS _`;
 		}
 
-		return `
-		
-			SELECT ${select}
-			FROM ${this.set.$meta.tableName} AS ${this.rootExtent.name}
-			${this.joins.map(j => j.toSQL()).join("\n")}
-			${wheres.length ? `WHERE ${wheres.join(" AND ")}` : ""}
-			${this.orders.length ? `ORDER BY ${this.orders.map(order => order.toSQL()).join(", ")}` : ""}
-			${this.limitRows == -1 ? "" : `LIMIT ${new QueryParameter(this, this.limitRows).name}`}
-			${this.skipRows == -1 ? "" : `OFFSET ${new QueryParameter(this, this.skipRows).name}`}
-		
-		`;
+		return `SELECT ${select} FROM ${this.set.$meta.tableName} AS ${this.rootExtent.name} ${
+			this.joins.map(j => j.toSQL()).join("\n")
+		} ${
+			this.includeClause.toJoinSQL()
+		} ${
+			wheres.length ? `WHERE ${wheres.join(" AND ")}` : ""
+		} ${
+			this.orders.length ? `ORDER BY ${this.orders.map(order => order.toSQL()).join(", ")}` : ""
+		} ${
+			this.limitRows == -1 ? "" : `LIMIT ${new QueryParameter(this, this.limitRows).name}`
+		} ${
+			this.skipRows == -1 ? "" : `OFFSET ${new QueryParameter(this, this.skipRows).name}`
+		}`;
 	}
 }

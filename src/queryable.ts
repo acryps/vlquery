@@ -12,7 +12,8 @@ export interface Queryable<TModel extends Entity<TQueryProxy>, TQueryProxy exten
 	count: Promise<number>; 
 
 	// selecting and prefetching
-	include(selector: ((item: TQueryProxy) => any) | any): Queryable<TModel, TQueryProxy>;
+	include(selector: (item: TModel) => any): Queryable<TModel, TQueryProxy>;
+	includeTree(tree: any): Queryable<TModel, TQueryProxy>;
 
 	// ordering 
 	orderByAscending(sorter: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy>;

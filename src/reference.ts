@@ -62,8 +62,12 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 		return await this.toQuery().toArray();
 	}
 
-	include(selector: ((item: TQueryProxy) => any) | any): Queryable<TSource, TQueryProxy> {
+	include(selector: (item: TSource) => any): Queryable<TSource, TQueryProxy> {
 		return this.toQuery().include(selector);
+	}
+
+	includeTree(tree: any): Queryable<TSource, TQueryProxy> {
+		return this.toQuery().includeTree(tree);
 	}
 
 	get count(): Promise<number> {
