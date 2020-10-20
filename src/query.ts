@@ -38,12 +38,6 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 		}
 	}
 	
-	map(mapper: (item: TModel) => any): Queryable<TModel, TQueryModel> {
-		this.mapper = mapper;
-
-		return this;
-	}
-	
 	where(query: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
 		// ensure compiled query
 		if (typeof query == "function") {

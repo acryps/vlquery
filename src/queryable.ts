@@ -14,7 +14,6 @@ export interface Queryable<TModel extends Entity<TQueryProxy>, TQueryProxy exten
 	// selecting and prefetching
 	include(selector: (item: TModel) => any): Queryable<TModel, TQueryProxy>;
 	includeTree(tree: any): Queryable<TModel, TQueryProxy>;
-	map(mapper: (item: TModel) => any): Queryable<TModel, TQueryProxy>;
 
 	// ordering 
 	orderByAscending(sorter: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy>;

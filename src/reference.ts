@@ -56,10 +56,6 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 		return !!this.$stored;
 	}
 
-	map(mapper: (item: TSource) => any): Queryable<TSource, TQueryProxy> {
-		return this.toQuery().map(mapper);
-	}
-
 	where(query: (item: TQueryProxy) => any): Queryable<TSource, TQueryProxy> {
 		return this.toQuery().where(query);
 	}

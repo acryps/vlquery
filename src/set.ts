@@ -130,10 +130,6 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	private toQuery() {
 		return new Query(this);
 	}
-	
-	map(mapper: (item: TModel) => any): Queryable<TModel, TQueryProxy> {
-		return this.toQuery().map(mapper);
-	}
 
 	where(query: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy> {
 		return this.toQuery().where(query);
