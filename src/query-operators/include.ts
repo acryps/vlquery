@@ -21,9 +21,36 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 			const itemParameter = parts[0].trim().replace(/\(|\)/g, "");
 			const path = parts[1].replace(`${itemParameter}.`, "").trim().split(".");
 
-			const tree = {};
+			const tree = query.includeClause ? query.includeClause.fetchTree : {};
+			let leaf = tree;
+			let set = proxy;
 
-			// TODO add include
+			// add properties of root
+			for (let key in proxy.$meta.columns) {
+				tree[key] = true;
+			}
+
+			// add referenced items
+			for (let item of path) {
+				const reference = new (set[item] as ForeignReference<TModel>).$relation();
+
+				if (!leaf[item]) {
+					leaf[item] = {};
+				}
+
+				for (let key in reference.$meta.columns) {
+					leaf[item][key] = true;
+				}
+
+				leaf = leaf[item];
+				set = reference;
+			}
+
+			if (query.includeClause) {
+				query.includeClause.fetchTree = tree;
+
+				return query.includeClause;
+			}
 
 			return new QueryInclude<TModel, TQueryModel>(query, tree);
 		} else {
