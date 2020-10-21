@@ -1,5 +1,7 @@
+import { QueryUUID } from ".";
+
 export class QueryProxy {
-	id: string;
+	id: QueryUUID;
 }
 
 export class QueryType {}
