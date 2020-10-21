@@ -1,7 +1,7 @@
 import { QueryUUID } from ".";
 
 export class QueryProxy {
-	id: QueryUUID;
+	id: QueryUUID & string;
 }
 
 export class QueryType {}
