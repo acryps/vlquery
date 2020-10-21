@@ -21,7 +21,7 @@ export function createContext() {
 		text: "QueryString",
 		integer: "QueryNumber",
 		boolean: "QueryBoolean",
-		uuid: "QueryString",
+		uuid: "QueryUUID",
 		"timestamp without time zone": "QueryTimeStamp",
 		"time without time zone": "QueryTime",
 		date: "QueryDate"
