@@ -52,7 +52,7 @@ export function createContext() {
 		let context = `
 import { Entity } from "vlquery";
 import { DbSet } from "vlquery";
-import { QueryProxy, QueryString, QueryTimeStamp, QueryNumber, QueryTime, QueryDate } from "vlquery";
+import { QueryUUID, QueryProxy, QueryString, QueryTimeStamp, QueryNumber, QueryTime, QueryDate } from "vlquery";
 import { ForeignReference, PrimaryReference } from "vlquery";
 		`.trim() + "\n";
 		let sets = [];
