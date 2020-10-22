@@ -7,7 +7,7 @@
 			"label": "Publish @dev to npm",
 			"detail": "Publish vlquery@dev to npm",
 			"type": "shell",
-			"command": "npm publish --tag dev",
+			"command": "npm version patch && npm publish --tag dev",
 			"problemMatcher": []
 		}
 	]
