@@ -9,6 +9,13 @@
 			"type": "shell",
 			"command": "npm version patch && npm publish --tag dev",
 			"problemMatcher": []
+		},
+		{
+			"label": "Publish @latest to npm",
+			"detail": "Publish vlquery@latest to npm",
+			"type": "shell",
+			"command": "npm version patch && npm publish",
+			"problemMatcher": []
 		}
 	]
 }
