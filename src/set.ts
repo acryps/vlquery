@@ -3,13 +3,13 @@ import { Entity } from "./entity";
 import { DbClient } from "./client";
 import { QueryProxy } from "./query-proxy";
 import { Query } from "./query";
-import { QueryInclude } from "./query-operators/include";
-import { ForeignReference, PrimaryReference } from ".";
+import { ForeignReference, PrimaryReference, RunContext } from ".";
 import { QueryColumnMapping } from "./query-operators/column-map";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	constructor(
-		public modelConstructor: new () => TModel
+		public modelConstructor: new () => TModel,
+		public runContext?: RunContext
 	) {}
 	
 	get $meta() {

@@ -206,16 +206,25 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 }
 			`;
 
-			sets.push(`static ${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)});`);
+			sets.push(`${config.context.runContext ? "" : "static "}${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}${config.context.runContext ? ", this.context" : ""});`);
 
 			config.compile.verbose && console.groupEnd();
 		}
 
-		context += `
+		if (config.context.runContext) {
+			context += `
+export class DbContext {
+	constructor(private runContext: RunContext) {}
+
+	${sets.join("\n\t")}
+};`.trim();
+		} else {
+			context += `
 export class db {
 	${sets.join("\n\t")}
 };
-		`;
+					`.trim();
+		}
 
 		fs.writeFileSync(`${config.root}/${config.context.outFile}`, context);
 	}

@@ -18,7 +18,13 @@ export const config = {
 	context: {
 		outFile: (userConfig.context && userConfig.context.outFile) || "db-context.ts",
 		connection: (userConfig.context && userConfig.context.connection) || {},
-		active: (userConfig.context && userConfig.context.active)
+		active: (userConfig.context && userConfig.context.active),
+		audit: userConfig.context.audit && {
+			entity: userConfig.context.audit.entity || (() => { throw new Error("No audit entity set!") })(),
+			track: userConfig.context.audit.track || (() => { throw new Error("No audit track set!") })(),
+			commentRequired: userConfig.context.audit.commentRequired
+		},
+		runContext: userConfig.context.userConfig
 	},
 	compile: {
 		scan: (userConfig.compile && userConfig.compile.scan) || [
