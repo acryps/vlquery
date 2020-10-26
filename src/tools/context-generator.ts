@@ -201,7 +201,8 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 		tableName: ${JSON.stringify(table)},
 		columns: ${JSON.stringify(columnMappings)},
 		get set() {
-			return db.${convertToModelName(table)}
+			// returns unbound dbset
+			return new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}, null)
 		},
 		${config.context.active ? `active: ${JSON.stringify(config.context.active)}` : ""}
 	};
