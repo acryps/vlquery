@@ -24,7 +24,7 @@ export const config = {
 			track: userConfig.context.audit.track || (() => { throw new Error("No audit track set!") })(),
 			commentRequired: userConfig.context.audit.commentRequired
 		},
-		runContext: userConfig.context.runContext
+		runContext: userConfig.context && userConfig.context.runContext
 	},
 	compile: {
 		scan: (userConfig.compile && userConfig.compile.scan) || [
