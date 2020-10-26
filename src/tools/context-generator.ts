@@ -50,10 +50,20 @@ export function createContext() {
 		`)).rows;
 
 		let context = `
-import { Entity } from "vlquery";
-import { DbSet } from "vlquery";
-import { QueryUUID, QueryProxy, QueryString, QueryTimeStamp, QueryNumber, QueryTime, QueryDate } from "vlquery";
-import { ForeignReference, PrimaryReference } from "vlquery";
+import { 
+	Entity, 
+	DbSet, 
+	RunContext,
+	QueryUUID, 
+	QueryProxy, 
+	QueryString, 
+	QueryTimeStamp, 
+	QueryNumber, 
+	QueryTime, 
+	QueryDate, 
+	ForeignReference, 
+	PrimaryReference
+} from "vlquery";
 		`.trim() + "\n";
 		let sets = [];
 
@@ -206,24 +216,23 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 }
 			`;
 
-			sets.push(`${config.context.runContext ? "" : "static "}${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}${config.context.runContext ? ", this.context" : ""});`);
+			sets.push(`${config.context.runContext ? "" : "static "}${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}${config.context.runContext ? ", this.runContext" : ""});`);
 
 			config.compile.verbose && console.groupEnd();
 		}
 
 		if (config.context.runContext) {
-			context += `
+			context += `\n
 export class DbContext {
 	constructor(private runContext: RunContext) {}
 
 	${sets.join("\n\t")}
-};`.trim();
+};`;
 		} else {
-			context += `
+			context += `\n
 export class db {
 	${sets.join("\n\t")}
-};
-					`.trim();
+};`;
 		}
 
 		fs.writeFileSync(`${config.root}/${config.context.outFile}`, context);
