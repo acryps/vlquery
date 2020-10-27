@@ -118,11 +118,11 @@ import {
 					body += `
 	private $${convertToModelName(parts[0])}: ForeignReference<${convertToClassName(constraint.foreign_table_name)}>;
 
-	get ${convertToModelName(parts[0])}(): ForeignReference<${convertToClassName(constraint.foreign_table_name)}> {
+	get ${convertToModelName(parts[0])}(): Partial<ForeignReference<${convertToClassName(constraint.foreign_table_name)}>> {
 		return this.$${convertToModelName(parts[0])};
 	}
 
-	set ${convertToModelName(parts[0])}(value: ForeignReference<${convertToClassName(constraint.foreign_table_name)}>) {
+	set ${convertToModelName(parts[0])}(value: Partial<ForeignReference<${convertToClassName(constraint.foreign_table_name)}>>) {
 		if (value) {
 			if (!value.id) {
 				throw new Error("Invalid null id. Save the referenced model prior to creating a reference to it.");
@@ -136,7 +136,7 @@ import {
 					`;
 
 					proxyBody += `
-	get ${convertToModelName(parts[0])}(): ${convertToQueryProxyName(constraint.foreign_table_name)} {
+	get ${convertToModelName(parts[0])}(): Partial<${convertToQueryProxyName(constraint.foreign_table_name)}> {
 		throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
 	}
 					`;
