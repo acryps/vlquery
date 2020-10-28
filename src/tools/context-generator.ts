@@ -67,6 +67,13 @@ import {
 		`.trim() + "\n";
 		let sets = [];
 
+		// check if audit table exists
+		if (config.context.audit) {
+			if (!tables.find(t => convertToModelName(t.tablename) == config.context.audit.entity)) {
+				throw new Error(`Cannot find audit table '${config.context.audit.entity}'. Check the spelling and be sure to use camel-case instead of '_' in vlconfig.json`);
+			} 
+		}
+
 		for (let table of tables.map(t => t.tablename)) {
 			config.compile.verbose && console.group(table);
 
@@ -79,6 +86,15 @@ import {
 			`, [
 				table
 			])).rows;
+
+			// check if all tracked properties extist in the audit table
+			if (config.context.audit && convertToModelName(table) == config.context.audit.entity) {
+				for (let column in config.context.audit.track) {
+					if (!columns.find(c => convertToModelName(c.column_name) == column)) {
+						throw new Error(`Cannot find tracked audit column '${column}' in audit table '${tables.name}'. Check the spelling and be sure to use camel-case instead of '_' in vlconfig.json`);
+					}
+				}
+			}
 
 			const constraints = (await client.query(`
 				SELECT
@@ -220,6 +236,48 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 			sets.push(`${config.context.runContext ? "" : "static "}${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}${config.context.runContext ? ", this.runContext" : ""});`);
 
 			config.compile.verbose && console.groupEnd();
+		}
+
+		if (config.context.audit) {
+			context += `\n
+DbSet.$audit = {
+	table: ${JSON.stringify(config.context.audit.entity)},
+	commentRequired: ${JSON.stringify(config.context)},
+
+	async createAudit(action: "create" | "update" | "delete", comment: string, entity: Entity<any>, runContext?: any) {
+		const audit = new ${convertToClassName(config.context.audit.entity)}();
+		${Object.keys(config.context.audit.track).map(column => `audit.${column} = ${(() => {
+			const value = config.context.audit.track[column];
+			let source = "";
+
+			if (Array.isArray(value)) {
+				// await all values just in case
+				source = `${"await (".repeat(value.length - 1)}await runContext${value.map(v => `[${JSON.stringify(v)}]`).join(")")};`;
+			} else if (value == "timestamp") {
+				source = `new Date();`;
+			} else if (value == "comment") {
+				source = `comment;`;
+			} else if (value == "action") {
+				source = `action;`;
+			} else if (value == "object") {
+				source = `Object.fromEntries(Object.keys(entity.$meta.columns).map(k => [k, entity[k]]));`;
+			} else if (value == "entity") {
+				source = `entity.$meta.tableName;`;
+			} else if (value == "id") {
+				source = `entity.id;`;
+			}
+
+			if (!source) {
+				throw new Error(`Unknown tracked audit attribute '${value}'`);
+			}
+
+			return `audit.${column} = ${source}`;
+		})()}`).join("\n\t\t")}
+
+		return audit;
+	}
+}
+			`;
 		}
 
 		if (config.context.runContext) {

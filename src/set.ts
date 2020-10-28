@@ -7,6 +7,17 @@ import { ForeignReference, PrimaryReference, RunContext } from ".";
 import { QueryColumnMapping } from "./query-operators/column-map";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
+	static $audit: {
+		table: string;
+		commentRequired: boolean;
+		createAudit(action: "create" | "update" | "delete", comment: string, entity: Entity<any>, runContext?: any): Promise<Entity<any>>;
+
+
+		tracked: {
+			[key: string]: "comment" | "timestamp" | "action" | "object" | "entity" | "id" | string;
+		}
+	}
+	
 	constructor(
 		public modelConstructor: new () => TModel,
 		public runContext?: RunContext
