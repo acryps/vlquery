@@ -12,10 +12,6 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		commentRequired: boolean;
 		contextRequired: boolean;
 
-		tracked: {
-			[key: string]: "comment" | "timestamp" | "action" | "object" | "entity" | "id" | string;
-		};
-
 		createAudit(action: "create" | "update" | "delete", comment: string, entity: Entity<any>, runContext?: any): Promise<Entity<any>>;
 	}
 	
