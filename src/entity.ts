@@ -22,15 +22,15 @@ export class Entity<TQueryProxy extends QueryProxy> {
 
 	id: string;
 
-	async create(): Promise<this> {
-		return await this.$meta.set.create(this) as this;
+	async create(comment?: string): Promise<this> {
+		return await this.$meta.set.create(this, comment) as this;
 	}
 
-	async update(): Promise<this> {
-		return await this.$meta.set.update(this) as this;
+	async update(comment?: string): Promise<this> {
+		return await this.$meta.set.update(this, comment) as this;
 	}
 
-	async delete(): Promise<void> {
-		await this.$meta.set.delete(this);
+	async delete(comment?: string): Promise<void> {
+		await this.$meta.set.delete(this, comment);
 	}
 }
