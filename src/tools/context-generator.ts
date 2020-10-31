@@ -94,7 +94,7 @@ import {
 			if (config.context.audit && convertToModelName(table) == config.context.audit.entity) {
 				for (let column in config.context.audit.track) {
 					if (!columns.find(c => convertToModelName(c.column_name) == column)) {
-						throw new Error(`Cannot find tracked audit column '${column}' in audit table '${tables.name}'. Check the spelling and be sure to use camel-case instead of '_' in vlconfig.json`);
+						throw new Error(`Cannot find tracked audit column '${column}' in audit table '${table}'. Check the spelling and be sure to use camel-case instead of '_' in vlconfig.json`);
 					}
 				}
 			}
