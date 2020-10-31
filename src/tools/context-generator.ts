@@ -245,7 +245,8 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 			context += `\n
 DbSet.$audit = {
 	table: ${JSON.stringify(config.context.audit.entity)},
-	commentRequired: ${JSON.stringify(config.context)},
+	contextRequired: ${Object.keys(config.context.audit.track).find(key => Array.isArray(config.context.audit.track[key]))},
+	commentRequired: ${JSON.stringify(config.context.audit.commentRequired)},
 
 	async createAudit(action: "create" | "update" | "delete", comment: string, entity: Entity<any>, runContext?: any) {
 		const audit = new ${convertToClassName(config.context.audit.entity)}();
@@ -264,13 +265,13 @@ DbSet.$audit = {
 				source = `action;`;
 			} else if (value == "object") {
 				return `
-			const object = {} as any;
+		const object = {} as any;
 
-			for (let key in entity.$meta.columns) {
-				object[key] = entity[key];
-			}
+		for (let key in entity.$meta.columns) {
+			object[key] = entity[key];
+		}
 
-			audit.${column} = object;
+		audit.${column} = object;
 				`.trim();
 			} else if (value == "entity") {
 				source = `entity.$meta.tableName;`;

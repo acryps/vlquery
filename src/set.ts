@@ -10,12 +10,13 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	static $audit: {
 		table: string;
 		commentRequired: boolean;
-		createAudit(action: "create" | "update" | "delete", comment: string, entity: Entity<any>, runContext?: any): Promise<Entity<any>>;
-
+		contextRequired: boolean;
 
 		tracked: {
 			[key: string]: "comment" | "timestamp" | "action" | "object" | "entity" | "id" | string;
-		}
+		};
+
+		createAudit(action: "create" | "update" | "delete", comment: string, entity: Entity<any>, runContext?: any): Promise<Entity<any>>;
 	}
 	
 	constructor(
@@ -27,7 +28,17 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return new this.modelConstructor().$meta;
 	}
 	
-	async create(item: TModel) {
+	async create(item: TModel, comment?: string) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
+			if (DbSet.$audit.commentRequired && !comment) {
+				throw new Error("No audit comment for create set!");
+			}
+
+			if (DbSet.$audit.contextRequired && !this.runContext) {
+				throw new Error(`Create called without a run context! Use the DbSet's create function`);
+			}
+		}
+
 		const properties = this.getStoredProperties(item);
 
 		if (item.$meta.active) {
@@ -51,12 +62,26 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 		item.id = id;
 
+		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
+			(await DbSet.$audit.createAudit("create", comment, item, this.runContext)).create();
+		}
+
 		return item;
 	}
 
-	async update(item: TModel) {
+	async update(item: TModel, comment?: string) {
 		if (!item.id) {
-			throw new Error(`Cannot update entity, an id is required!`);
+			throw new Error("Cannot update entity, an id is required!");
+		}
+
+		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
+			if (DbSet.$audit.commentRequired && !comment) {
+				throw new Error("No audit comment for update set!");
+			}
+
+			if (DbSet.$audit.contextRequired && !this.runContext) {
+				throw new Error(`Update called without a run context! Use the DbSet's update function`);
+			}
 		}
 
 		const properties = this.getStoredProperties(item);
@@ -72,10 +97,24 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			...properties.map(p => p.value)
 		]);
 
+		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
+			(await DbSet.$audit.createAudit("update", comment, item, this.runContext)).create();
+		}
+
 		return item;
 	}
 
-	async delete(item: TModel) {
+	async delete(item: TModel, comment?: string) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
+			if (DbSet.$audit.commentRequired && !comment) {
+				throw new Error("No audit comment for delete set!");
+			}
+
+			if (DbSet.$audit.contextRequired && !this.runContext) {
+				throw new Error(`Delete called without a run context! Use the DbSet's delete function`);
+			}
+		}
+
 		for (let key in item) {
 			const column = item[key];
 
@@ -107,6 +146,10 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			`, [
 				item.id
 			]);
+		}
+
+		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
+			(await DbSet.$audit.createAudit("delete", comment, item, this.runContext)).create();
 		}
 	}
 
