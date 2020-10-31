@@ -14,7 +14,8 @@ export function createContext() {
 		uuid: "string",
 		"timestamp without time zone": "Date",
 		"time without time zone": "Date",
-		date: "Date"
+		date: "Date",
+		json: "any"
 	};
 
 	const proxyTypeMapping = {
@@ -24,7 +25,8 @@ export function createContext() {
 		uuid: "QueryUUID",
 		"timestamp without time zone": "QueryTimeStamp",
 		"time without time zone": "QueryTime",
-		date: "QueryDate"
+		date: "QueryDate",
+		json: "QueryJSON"
 	};
 
 	async function main() {
@@ -51,17 +53,18 @@ export function createContext() {
 
 		let context = `
 import { 
-	Entity, 
-	DbSet, 
+	Entity,
+	DbSet,
 	RunContext,
-	QueryUUID, 
-	QueryProxy, 
-	QueryString, 
-	QueryTimeStamp, 
-	QueryNumber, 
-	QueryTime, 
-	QueryDate, 
-	ForeignReference, 
+	QueryUUID,
+	QueryProxy,
+	QueryString,
+	QueryJSON,
+	QueryTimeStamp,
+	QueryNumber,
+	QueryTime,
+	QueryDate,
+	ForeignReference,
 	PrimaryReference
 } from "vlquery";
 		`.trim() + "\n";
