@@ -249,7 +249,7 @@ DbSet.$audit = {
 
 	async createAudit(action: "create" | "update" | "delete", comment: string, entity: Entity<any>, runContext?: any) {
 		const audit = new ${convertToClassName(config.context.audit.entity)}();
-		${Object.keys(config.context.audit.track).map(column => `audit.${column} = ${(() => {
+		${Object.keys(config.context.audit.track).map(column => {
 			const value = config.context.audit.track[column];
 			let source = "";
 
@@ -263,7 +263,15 @@ DbSet.$audit = {
 			} else if (value == "action") {
 				source = `action;`;
 			} else if (value == "object") {
-				source = `Object.fromEntries(Object.keys(entity.$meta.columns).map(k => [k, entity[k]]));`;
+				return `
+			const object = {} as any;
+
+			for (let key in entity.$meta.columns) {
+				object[key] = entity[key];
+			}
+
+			audit.${column} = object;
+				`.trim();
 			} else if (value == "entity") {
 				source = `entity.$meta.tableName;`;
 			} else if (value == "id") {
@@ -275,7 +283,7 @@ DbSet.$audit = {
 			}
 
 			return `audit.${column} = ${source}`;
-		})()}`).join("\n\t\t")}
+		}).join("\n\t\t")}
 
 		return audit;
 	}
