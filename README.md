@@ -21,9 +21,9 @@ await authorsFirstBookFrom2001.update();
 [Using audits with an express server](https://github.com/levvij/vlquery-audit-example)
 
 ## Documentation
-[Getting started](doc/getting-started.md)
-[Database structure](doc/database-structure.md)
-[Getting and filtering data](doc/getting-and-filtering-data.md)
-[Altering data](doc/altering-data.md)
-[Adding audits](doc/audit.md)
+[Getting started](doc/getting-started.md)<br>
+[Database structure](doc/database-structure.md)<br>
+[Getting and filtering data](doc/getting-and-filtering-data.md)<br>
+[Altering data](doc/altering-data.md)<br>
+[Adding audits](doc/audit.md)<br>
 [Performance and include](doc/performance-and-include.md)
