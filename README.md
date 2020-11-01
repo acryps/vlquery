@@ -25,4 +25,5 @@ await authorsFirstBookFrom2001.update();
 [Database structure](doc/database-structure.md)
 [Getting and filtering data](doc/getting-and-filtering-data.md)
 [Altering data](doc/altering-data.md)
+[Adding audits](doc/audit.md)
 [Performance and include](doc/performance-and-include.md)
