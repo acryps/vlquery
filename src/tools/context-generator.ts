@@ -1,5 +1,6 @@
 import { Client } from "pg";
 import * as fs from "fs";
+import * as pathTools from "path";
 import { config } from "../config";
 
 export function createContext() {
@@ -304,6 +305,19 @@ export class DbContext {
 export class db {
 	${sets.join("\n\t")}
 };`;
+		}
+
+		let missingPaths = [];
+		let path = config.root;
+
+		while (!fs.existsSync(path)) {
+			missingPaths.push(path);
+
+			path = pathTools.basename(path);
+		}
+
+		for (let path of missingPaths) {
+			fs.mkdirSync(path);
 		}
 
 		fs.writeFileSync(`${config.root}/${config.context.outFile}`, context);
