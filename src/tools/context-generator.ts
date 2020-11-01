@@ -310,9 +310,7 @@ export class db {
 		let missingPaths = [];
 		let path = pathTools.join(config.root, config.context.outFile);
 
-		while (!fs.existsSync(path)) {
-			path = pathTools.dirname(path);
-
+		while (!fs.existsSync(path = pathTools.dirname(path))) {
 			missingPaths.push(path);
 		}
 
