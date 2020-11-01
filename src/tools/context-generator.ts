@@ -311,12 +311,12 @@ export class db {
 		let path = pathTools.join(config.root, config.context.outFile);
 
 		while (!fs.existsSync(path)) {
-			missingPaths.push(path);
+			path = pathTools.dirname(path);
 
-			path = pathTools.basename(path);
+			missingPaths.push(path);
 		}
 
-		for (let path of missingPaths) {
+		for (let path of missingPaths.reverse()) {
 			fs.mkdirSync(path);
 		}
 
