@@ -12,7 +12,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		commentRequired: boolean;
 		contextRequired: boolean;
 
-		createAudit(action: "create" | "update" | "delete", comment: string, entity: Entity<any>, runContext?: any): Promise<Entity<any>>;
+		createAudit(action: "create" | "update" | "delete", comment: string, entity: Entity<any>, runContext?: any): Promise<Entity<any>>;
 	}
 	
 	constructor(

@@ -12,7 +12,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 
 	constructor(
 		public query: Query<TModel, TQueryModel>,
-		selectorOrTree: ((item: TQueryModel) => any) | any
+		selectorOrTree: ((item: TQueryModel) => any) | any
 	) {
 		if (typeof selectorOrTree == "function") {
 			const proxy = new query.set.modelConstructor();

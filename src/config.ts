@@ -21,16 +21,16 @@ export const config = {
 		active: (userConfig.context && userConfig.context.active),
 		audit: userConfig.context && userConfig.context.audit && {
 			entity: userConfig.context.audit.entity || (() => { throw new Error("No audit entity set!") })(),
-			track: userConfig.context.audit.track || (() => { throw new Error("No audit track set!") })(),
+			track: userConfig.context.audit.track || (() => { throw new Error("No audit track set!") })(),
 			commentRequired: userConfig.context.audit.commentRequired
 		},
 		runContext: userConfig.context && userConfig.context.runContext
 	},
 	compile: {
-		scan: (userConfig.compile && userConfig.compile.scan) || [
+		scan: (userConfig.compile && userConfig.compile.scan) || [
 			"${tsout}",
 		],
-		methods: (userConfig.compile && userConfig.compile.methods) || [
+		methods: (userConfig.compile && userConfig.compile.methods) || [
 			"where",
 			"first",
 			"count"

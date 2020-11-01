@@ -1,4 +1,4 @@
-# Audit
+# Audit
 vlquery supports native audit logging. 
 To enable it, create an audit table in your database.
 For this example, let's use a table named `audit`.
@@ -47,7 +47,7 @@ object | Current Object | `{"id":"...","title":"My First Book"}`
 entity | Entity, name in database | `book`
 id | Id of the entity | `66eff73a-b03c-47c2-bb26-b3ef6eee7f84`
 
-## Run Context
+## Run Context
 Just adding the standard values might not be enought.
 Image you'd want to add the user that created the request to your server to the audit trail.
 We need to get this user somehow, without the hassle of passing him to the database calls every time we wanna access his data.

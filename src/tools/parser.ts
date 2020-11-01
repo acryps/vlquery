@@ -123,7 +123,7 @@ export function compileQueries() {
 		const filterTrees = [];
 
 		esprima.parse(contents, { range: true }, (node, meta) => {
-			if (node.type == "CallExpression") {
+			if (node.type == "CallExpression") {
 				// check if the call is directed towards first, where, ...
 				if (node.callee.property && config.compile.methods.includes(node.callee.property.name)) {
 					// only compile the filter function if there is one

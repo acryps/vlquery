@@ -16,7 +16,7 @@ authorsFirstBookFrom2001.title = "A new title";
 await authorsFirstBookFrom2001.update();
 </pre>
 
-## Examples
+## Examples
 [Simple Example Project](https://github.com/levvij/vlquery-example)
 [Using audits with an express server](https://github.com/levvij/vlquery-audit-example)
 

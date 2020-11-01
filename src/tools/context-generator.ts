@@ -120,7 +120,7 @@ import {
 
 			config.compile.verbose && console.group("constraints");
 
-			for (let constraint of constraints) {
+			for (let constraint of constraints) {
 				config.compile.verbose && console.log(constraint.constraint_name);
 
 				const parts = constraint.constraint_name.split("__");
@@ -248,7 +248,7 @@ DbSet.$audit = {
 	contextRequired: ${JSON.stringify(!!Object.keys(config.context.audit.track).find(key => Array.isArray(config.context.audit.track[key])))},
 	commentRequired: ${JSON.stringify(!!config.context.audit.commentRequired)},
 
-	async createAudit(action: "create" | "update" | "delete", comment: string, entity: Entity<any>, runContext?: any) {
+	async createAudit(action: "create" | "update" | "delete", comment: string, entity: Entity<any>, runContext?: any) {
 		const audit = new ${convertToClassName(config.context.audit.entity)}();
 		${Object.keys(config.context.audit.track).map(column => {
 			const value = config.context.audit.track[column];

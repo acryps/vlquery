@@ -40,7 +40,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	
 	where(query: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
 		// ensure compiled query
-		if (typeof query == "function") {
+		if (typeof query == "function") {
 			throw new Error("Uncompiled query cannot be used in runtime");
 		}
 

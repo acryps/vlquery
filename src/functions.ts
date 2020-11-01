@@ -5,7 +5,7 @@ export class QueryFunction {
 	constructor(
 		public argCount: number | [number, number],
 		public converter: (fragment: QueryFragment<Entity<QueryProxy>, QueryProxy>) => string,
-	) {}
+	) {}
 
 	toSQL(fragment: QueryFragment<Entity<QueryProxy>, QueryProxy>) {
 		if (typeof this.argCount == "number" && fragment.call.parameters.length != this.argCount) {
