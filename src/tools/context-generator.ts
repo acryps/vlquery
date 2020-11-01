@@ -308,7 +308,7 @@ export class db {
 		}
 
 		let missingPaths = [];
-		let path = config.root;
+		let path = pathTools.join(config.root, config.context.outFile);
 
 		while (!fs.existsSync(path)) {
 			missingPaths.push(path);
@@ -320,7 +320,7 @@ export class db {
 			fs.mkdirSync(path);
 		}
 
-		fs.writeFileSync(`${config.root}/${config.context.outFile}`, context);
+		fs.writeFileSync(pathTools.join(config.root, config.context.outFile), context);
 	}
 
 	main().then(async () => {
