@@ -94,9 +94,9 @@ This will grab `runContext.currentUser.username` from the context when an audit 
 **You'll need to replace all database-calls in your entities with the calls in their sets!**
 
 ```
-book.update("Updated books information") // this will fail because we have no reference to the run context
+book.update("Updated books information") // this will fail because we do not have a reference to the run context
 
-db.book.update(book, "Updated books information") // this will work because the run context is tracked on the DbSet 'book'
+db.book.update(book, "Updated books information") // this will work because the run context is referenced in the 'book' DbSet
 ```
 
 All values in the tracked property can be promises and will be resolved.
