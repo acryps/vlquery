@@ -9,7 +9,7 @@ import { QueryColumnMapping } from "./column-map";
 export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
 	fetchTree: any;
 	rootLeaf: QueryIncludeIndent<TModel, TQueryModel>;
-	includedLeafs: { leaf: any, name: string }[] = [];
+	includedLeafs: { leaf: any, path: string[] }[] = [];
 
 	constructor(
 		public query: Query<TModel, TQueryModel>,
@@ -64,7 +64,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 		const proxy = new set.modelConstructor();
 
 		// protect from loops
-		if (this.includedLeafs.find(l => l.leaf == leaf && l.name == path[path.length - 1])) {
+		if (this.includedLeafs.find(l => l.leaf == leaf && path.slice(path.length - l.path.length, path.length - 1).join() == l.path.join())) {
 			return;
 		}
 
@@ -132,7 +132,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 
 		this.includedLeafs.push({
 			leaf,
-			name: path[path.length - 1]
+			path
 		});
 
 		return indent;
