@@ -9,6 +9,7 @@ import { QueryColumnMapping } from "./column-map";
 export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
 	fetchTree: any;
 	rootLeaf: QueryIncludeIndent<TModel, TQueryModel>;
+	includedLeafs: { leaf: any, name: string }[] = [];
 
 	constructor(
 		public query: Query<TModel, TQueryModel>,
@@ -61,6 +62,11 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 	build(leaf, set: DbSet<Entity<QueryProxy>, QueryProxy>, extent: QueryExtent<Entity<QueryProxy>, QueryProxy>, path: string[]) {
 		const indent = new QueryIncludeIndent();
 		const proxy = new set.modelConstructor();
+
+		// protect from loops
+		if (this.includedLeafs.find(l => l.leaf == leaf && l.name == path[path.length - 1])) {
+			return;
+		}
 
 		for (let property in leaf) {
 			if (set.$meta.columns[property]) {
@@ -123,6 +129,11 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 				indent.childIndents.push(group);
 			}
 		}
+
+		this.includedLeafs.push({
+			leaf,
+			name: path[path.length - 1]
+		});
 
 		return indent;
 	}
