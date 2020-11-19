@@ -160,7 +160,9 @@ import {
 		throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
 	}
 					`;
-				} else {
+				}
+				
+				if (constraint.foreign_table_name == table) {
 					constr += `
 		this.${convertToModelName(parts[1])} = new PrimaryReference<${convertToClassName(constraint.table_name)}, ${convertToQueryProxyName(constraint.table_name)}>(
 			this,
