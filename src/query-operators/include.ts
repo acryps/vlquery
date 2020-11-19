@@ -9,8 +9,7 @@ import { QueryColumnMapping } from "./column-map";
 export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
 	fetchTree: any;
 	rootLeaf: QueryIncludeIndent<TModel, TQueryModel>;
-	includedLeafs: { leaf: any, name: string }[] = [];
-
+	
 	constructor(
 		public query: Query<TModel, TQueryModel>,
 		selectorOrTree: ((item: TQueryModel) => any) | any
@@ -64,72 +63,65 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 		const proxy = new set.modelConstructor();
 
 		for (let property in leaf) {
-			if (!this.includedLeafs.find(l => l.leaf == leaf && l.name == property)) {
-				if (set.$meta.columns[property]) {
-					const col = set.$meta.columns[property];
+			if (set.$meta.columns[property]) {
+				const col = set.$meta.columns[property];
 
-					const node = new QueryIncludeNode();
-					node.name = col.name;
-					node.extent = extent;
-					node.to = new QueryColumnMapping(this.query, [
-						...path, 
-						property
-					], col.type)
+				const node = new QueryIncludeNode();
+				node.name = col.name;
+				node.extent = extent;
+				node.to = new QueryColumnMapping(this.query, [
+					...path, 
+					property
+				], col.type)
 
-					indent.properties.push(node);
-				} else if (proxy[property] && proxy[property] instanceof ForeignReference) {
-					let targetExtent: QueryJoin<TModel, TQueryModel>;
-					const reference = proxy[property] as ForeignReference<TModel>;
-					const meta = (new reference.$relation()).$meta;
+				indent.properties.push(node);
+			} else if (proxy[property] && proxy[property] instanceof ForeignReference) {
+				let targetExtent: QueryJoin<TModel, TQueryModel>;
+				const reference = proxy[property] as ForeignReference<TModel>;
+				const meta = (new reference.$relation()).$meta;
 
-					// only search for extisting join if on the first level
-					if (extent == this.query.rootExtent) {
-						const join = this.query.joins.find(j => j.table == meta.tableName);
+				// only search for extisting join if on the first level
+				if (extent == this.query.rootExtent) {
+					const join = this.query.joins.find(j => j.table == meta.tableName);
 
-						if (join) {
-							targetExtent = join;
-						}
+					if (join) {
+						targetExtent = join;
 					}
-
-					if (!targetExtent) {
-						// create new join
-						targetExtent = new QueryJoin(
-							this.query, 
-							extent, 
-							meta.tableName, 
-							proxy.$meta.columns[reference.$column].name
-						);
-
-						// remove the join form the root joins and add it to the indents joins
-						if (extent != this.query.rootExtent) {
-							this.query.joins.pop();
-
-							indent.joins.push(targetExtent);
-						}
-					}
-
-					indent.merge(this.build(leaf[property], meta.set, targetExtent.extent, [...path, property]));
-				} else if (proxy[property] && proxy[property] instanceof PrimaryReference) {
-					const reference = proxy[property] as PrimaryReference<TModel, TQueryModel>;
-					const meta = (new reference.$relation()).$meta;
-
-					const group = new QueryIncludeIndentGroup();
-					group.mappedName = property;
-					group.parentExtent = extent;
-					group.exportingExtent = new QueryExtent(this.query);
-					group.innerExtent = new QueryExtent(this.query);
-					group.groupedColumn = meta.columns[reference.$column].name;
-					group.sourceTable = meta.tableName;
-					group.indent = this.build(leaf[property], meta.set, group.innerExtent, [...path, property]);
-
-					indent.childIndents.push(group);
 				}
-			}
 
-			this.includedLeafs.push({
-				leaf,
-				name: property
-			});
+				if (!targetExtent) {
+					// create new join
+					targetExtent = new QueryJoin(
+						this.query, 
+						extent, 
+						meta.tableName, 
+						proxy.$meta.columns[reference.$column].name
+					);
+
+					// remove the join form the root joins and add it to the indents joins
+					if (extent != this.query.rootExtent) {
+						this.query.joins.pop();
+
+						indent.joins.push(targetExtent);
+					}
+				}
+
+				indent.merge(this.build(leaf[property], meta.set, targetExtent.extent, [...path, property]));
+			} else if (proxy[property] && proxy[property] instanceof PrimaryReference) {
+				const reference = proxy[property] as PrimaryReference<TModel, TQueryModel>;
+				const meta = (new reference.$relation()).$meta;
+
+				const group = new QueryIncludeIndentGroup();
+				group.mappedName = property;
+				group.parentExtent = extent;
+				group.exportingExtent = new QueryExtent(this.query);
+				group.innerExtent = new QueryExtent(this.query);
+				group.groupedColumn = meta.columns[reference.$column].name;
+				group.sourceTable = meta.tableName;
+				group.indent = this.build(leaf[property], meta.set, group.innerExtent, [...path, property]);
+
+				indent.childIndents.push(group);
+			}
 		}
 
 		return indent;
