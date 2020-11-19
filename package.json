@@ -5,6 +5,8 @@
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
 	"scripts": {
+		"preversion": "git pull",
+		"postversion": "git push",
 		"prepare": "tsc && npx vlquery compile"
 	},
 	"bin": {
