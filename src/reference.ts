@@ -16,6 +16,14 @@ export class ForeignReference<T extends Entity<QueryProxy>> {
 		return this.$item[this.$column];
 	}
 
+	set id(value: string) {
+		if (this.$stored) {
+			delete this.$stored;
+		}
+
+		this.$item[this.$column] = value;
+	}
+
 	async fetch?(): Promise<T> {
 		if (this.$stored) {
 			return this.$stored;
