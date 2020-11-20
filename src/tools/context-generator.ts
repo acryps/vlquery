@@ -300,6 +300,16 @@ DbSet.$audit = {
 export class DbContext {
 	constructor(private runContext: RunContext) {}
 
+	findSet(modelType) {
+		for (let key in this) {
+			if (this[key] instanceof DbSet) {
+				if (this[key].modelConstructor == modelType) {
+					return this;
+				}
+			}
+		}
+	}
+
 	${sets.join("\n\t")}
 };`;
 		} else {
