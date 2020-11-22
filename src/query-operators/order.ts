@@ -13,7 +13,7 @@ export class QueryOrder<TModel extends Entity<TQueryModel>, TQueryModel extends 
 	constructor(
 		public query: Query<TModel, TQueryModel>,
 		sorter: (item: TQueryModel) => any,
-		public direction: "asc" | "dsc"
+		public direction: "asc" | "desc"
 	) {
 		const properties = sorter.toString().split("=>")[1].split(".").map(v => v.trim()).slice(1);
 

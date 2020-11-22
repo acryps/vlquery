@@ -112,7 +112,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	}
 
 	orderByDescending(sorter: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
-		this.orders.push(new QueryOrder(this, sorter, "dsc"));
+		this.orders.push(new QueryOrder(this, sorter, "desc"));
 
 		return this;
 	}
