@@ -304,7 +304,7 @@ export class DbContext {
 		for (let key in this) {
 			if (this[key] instanceof DbSet) {
 				if ((this[key] as any).modelConstructor == modelType) {
-					return this;
+					return this[key];
 				}
 			}
 		}
