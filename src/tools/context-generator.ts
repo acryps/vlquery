@@ -22,6 +22,8 @@ export function createContext() {
 	const proxyTypeMapping = {
 		text: "QueryString",
 		integer: "QueryNumber",
+		float: "QueryNumber",
+		real: "QueryNumber",
 		boolean: "QueryBoolean",
 		uuid: "QueryUUID",
 		"timestamp without time zone": "QueryTimeStamp",
