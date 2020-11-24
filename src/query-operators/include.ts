@@ -169,7 +169,7 @@ class QueryIncludeIndent<TModel extends Entity<TQueryModel>, TQueryModel extends
 		const joins = [];
 
 		for (let child of this.childIndents) {
-			joins.push(`LEFT JOIN ( SELECT ${child.innerExtent.name}.${child.groupedColumn}, json_agg(${child.indent.toSelectSQL()}) AS _ FROM ${child.sourceTable} AS ${child.innerExtent.name} ${child.indent.joins.map(j => j.toSQL())} ${child.indent.toJoinSQL()} GROUP BY ${child.innerExtent.name}.${child.groupedColumn} ) AS ${child.exportingExtent.name} ON ${child.parentExtent.name}.id = ${child.exportingExtent.name}.${child.groupedColumn}`);
+			joins.push(`LEFT JOIN ( SELECT ${child.innerExtent.name}.${child.groupedColumn}, json_agg(${child.indent.toSelectSQL()}) AS _ FROM ${child.sourceTable} AS ${child.innerExtent.name} ${child.indent.joins.map(j => j.toSQL()).join(" ")} ${child.indent.toJoinSQL()} GROUP BY ${child.innerExtent.name}.${child.groupedColumn} ) AS ${child.exportingExtent.name} ON ${child.parentExtent.name}.id = ${child.exportingExtent.name}.${child.groupedColumn}`);
 		}
 
 		return joins.join("\n");
