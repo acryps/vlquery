@@ -163,7 +163,10 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 		}
 
 		return `SELECT ${select} FROM ${this.set.$meta.tableName} AS ${this.rootExtent.name} ${
-			this.joins.map(j => j.toSQL()).join("\n")
+			[
+				...this.joins,
+				...this.includeClause.rootLeaf.joins
+			].map(j => j.toSQL()).join("\n")
 		} ${
 			this.includeClause.toJoinSQL()
 		} ${
