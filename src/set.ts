@@ -261,17 +261,21 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			}
 
 			if (relation instanceof PrimaryReference && key in raw) {
-				const set = (new relation.$relation()).$meta.set;
+				if (raw[key]) {
+					const set = (new relation.$relation()).$meta.set;
 
-				const items = raw[key].map(item => set.constructObject(item, columnMappings, [
-					...path,
-					key
-				]));
+					const items = raw[key].map(item => set.constructObject(item, columnMappings, [
+						...path,
+						key
+					]));
 
-				// store prefetched result in private $stored variable
-				// you should NEVER access this variable
-				// use .fetch() instead!
-				relation["$stored"] = items;
+					// store prefetched result in private $stored variable
+					// you should NEVER access this variable
+					// use .fetch() instead!
+					relation["$stored"] = items;
+				} else {
+					relation["$stored"] = null;
+				}
 			}
 		}
 
