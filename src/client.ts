@@ -5,7 +5,7 @@ export class DbClient {
 	
 	connection: Client;
 
-	constructor(configuration) {
+	constructor(configuration?) {
 		this.connection = new Client(configuration);
 	}
 
