@@ -18,6 +18,6 @@ export class QueryJoin<TModel extends Entity<TQueryModel>, TQueryModel extends Q
 	}
 
 	toSQL() {
-		return `LEFT JOIN ${this.table} AS ${this.extent.name} ON${this.query.set.$meta.active ? ` ${this.extent.name}.${this.query.set.$meta.active}` : ""} ${this.from.name}.${this.column} = ${this.extent.name}.id`;
+		return `LEFT JOIN ${this.table} AS ${this.extent.name} ON${this.query.set.$meta.active ? ` ${this.extent.name}.${this.query.set.$meta.active} AND` : ""} ${this.from.name}.${this.column} = ${this.extent.name}.id`;
 	}
 }
