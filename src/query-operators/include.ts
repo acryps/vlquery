@@ -59,7 +59,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 	}
 
 	build(leaf, set: DbSet<Entity<QueryProxy>, QueryProxy>, extent: QueryExtent<Entity<QueryProxy>, QueryProxy>, path: string[]) {
-		const indent = new QueryIncludeIndent();
+		const indent = new QueryIncludeIndent(this.query);
 		const proxy = new set.modelConstructor();
 
 		for (let property in leaf) {
