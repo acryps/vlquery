@@ -67,6 +67,7 @@ import {
 	QueryNumber,
 	QueryTime,
 	QueryDate,
+	QueryBoolean,
 	ForeignReference,
 	PrimaryReference
 } from "vlquery";
