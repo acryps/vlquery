@@ -62,6 +62,11 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 		const indent = new QueryIncludeIndent(this.query);
 		const proxy = new set.modelConstructor();
 
+		// add id to check for null relations
+		if ("id" in leaf) {
+			leaf.id = true;
+		} 
+
 		for (let property in leaf) {
 			if (set.$meta.columns[property]) {
 				const col = set.$meta.columns[property];

@@ -248,16 +248,21 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			const relation = model[key];
 
 			if (relation instanceof ForeignReference && columnMappings.find(m => m.path[path.length] == key.replace("$", ""))) {
-				// construct prefetched item
-				const child = (new relation.$relation().$meta.set).constructObject(raw, columnMappings, [
-					...path, 
-					key.replace("$", "")
-				]);
+				// check if id is null (empty relation target)
+				if (raw.id) {
+					// construct prefetched item
+					const child = (new relation.$relation().$meta.set).constructObject(raw, columnMappings, [
+						...path, 
+						key.replace("$", "")
+					]);
 
-				// store prefetched item into private $stored variable
-				// you should NEVER access this variable
-				// use .fetch() instead!
-				relation["$stored"] = child;
+					// store prefetched item into private $stored variable
+					// you should NEVER access this variable
+					// use .fetch() instead!
+					relation["$stored"] = child;
+				} else {
+					relation["$stored"] = null;
+				} 
 			}
 
 			if (relation instanceof PrimaryReference && key in raw) {
