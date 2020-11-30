@@ -231,10 +231,23 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 	constructObject(raw: any, columnMappings: QueryColumnMapping<TModel, TQueryProxy>[], path: string[]) {
 		const model = new this.modelConstructor();
+		const leaf = [];
 
-		const columns = columnMappings.filter(
-			c => c.path.length == path.length + 1 && !c.path.slice(0, c.path.length - 1).find((e, i) => path[i] != e)
-		);
+		for (let mapping of columnMappings) {
+			let addMapping = true;
+
+			for (let i = 0; i < path.length; i++) {
+				if (path[i] != mapping.path[i]) {
+					addMapping = false;
+				}	
+			}
+
+			if (addMapping) {
+				leaf.push(mapping);
+			}
+		}
+
+		const columns = leaf.filter(c => c.path.length == path.length + 1);
 
 		for (let col in model.$meta.columns) {
 			const map = columns.find(c => c.lastComponent == col);
@@ -248,8 +261,10 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			const relation = model[key];
 
 			if (relation instanceof ForeignReference && columnMappings.find(m => m.path[path.length] == key.replace("$", ""))) {
+				const idMapping = leaf.find(m => m.path[path.length] == key.replace("$", "") && m.path[path.length + 1] == "id");
+
 				// check if id is null (empty relation target)
-				if (raw.id) {
+				if (idMapping && raw[idMapping.name]) {
 					// construct prefetched item
 					const child = (new relation.$relation().$meta.set).constructObject(raw, columnMappings, [
 						...path, 
