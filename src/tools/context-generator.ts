@@ -16,7 +16,8 @@ export function createContext() {
 		"timestamp without time zone": "Date",
 		"time without time zone": "Date",
 		date: "Date",
-		json: "any"
+		json: "any",
+		jsonb: "any"
 	};
 
 	const proxyTypeMapping = {
@@ -29,7 +30,8 @@ export function createContext() {
 		"timestamp without time zone": "QueryTimeStamp",
 		"time without time zone": "QueryTime",
 		date: "QueryDate",
-		json: "QueryJSON"
+		json: "QueryJSON",
+		jsonb: "QueryJSON"
 	};
 
 	async function main() {
