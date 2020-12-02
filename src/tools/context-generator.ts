@@ -227,7 +227,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 	$meta = {
 		tableName: ${JSON.stringify(table)},
 		columns: ${JSON.stringify(columnMappings)},
-		get set() {
+		get set(): DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> { {
 			// returns unbound dbset
 			return new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}, null)
 		},
