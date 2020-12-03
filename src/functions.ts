@@ -23,5 +23,6 @@ export class QueryFunction {
 export const queryFunctions = {
 	isAfter: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} > ${fragment.call.parameters[0].toSQL()}`),
 	isBefore: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} < ${fragment.call.parameters[0].toSQL()}`),
-	includedIn: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} = ANY (${fragment.call.parameters[0].toSQL()})`)
+	includedIn: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} = ANY (${fragment.call.parameters[0].toSQL()})`),
+	valueOf: new QueryFunction(0, fragment => fragment.call.source.toSQL())
 }
