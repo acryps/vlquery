@@ -17,7 +17,7 @@ export class ByteArray implements BaseDataType {
 
     static fromSQL(value: string) {
         if (value) {
-            return Buffer.from(value, "hex");
+            return Buffer.from(value.substring(2), "hex");
         }
     }
 }
