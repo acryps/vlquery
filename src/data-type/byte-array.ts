@@ -6,7 +6,7 @@ export class ByteArray implements BaseDataType {
             return `$${parameterIndex}`;
         }
 
-        return `VALUES(DECODE($${parameterIndex}::text, 'hex'))`;
+        return `DECODE($${parameterIndex}::text, 'hex')`;
     }
 
     static toSQLParameter(value: Buffer) {
