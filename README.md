@@ -1,3 +1,5 @@
+![vlquery logo](doc/assets/logo.svg "vlquery logo")
+
 # vlquery TypeScript ORM
 Simple to use TypeScript based database first ORM for postgres.
 
