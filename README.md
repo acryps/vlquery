@@ -1,4 +1,4 @@
-![vlquery logo](doc/assets/logo.svg | height=50)
+![vlquery logo](doc/assets/logo.svg | width=200)
 
 # vlquery TypeScript ORM
 Simple to use TypeScript based database first ORM for postgres.
