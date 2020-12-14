@@ -17,7 +17,8 @@ export function createContext() {
 		"time without time zone": "Date",
 		date: "Date",
 		json: "any",
-		jsonb: "any"
+		jsonb: "any",
+		bytea: "Buffer"
 	};
 
 	const proxyTypeMapping = {
@@ -31,7 +32,8 @@ export function createContext() {
 		"time without time zone": "QueryTime",
 		date: "QueryDate",
 		json: "QueryJSON",
-		jsonb: "QueryJSON"
+		jsonb: "QueryJSON",
+		bytea: "QueryBuffer"
 	};
 
 	async function main() {
@@ -70,6 +72,7 @@ import {
 	QueryTime,
 	QueryDate,
 	QueryBoolean,
+	QueryBuffer,
 	ForeignReference,
 	PrimaryReference
 } from "vlquery";
