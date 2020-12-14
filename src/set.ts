@@ -52,7 +52,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			INSERT INTO ${item.$meta.tableName} (
 				${properties.map(p => p.name)}
 			) VALUES (
-				${properties.map((p, i) => `$${dataTypes[p.type].sqlParameterTransform(i + 1, p.value)}`)}
+				${properties.map((p, i) => `${dataTypes[p.type].sqlParameterTransform(i + 1, p.value)}`)}
 			) RETURNING id
 		
 		`, properties.map(p => dataTypes[p.type].toSQLParameter(p.value))))[0].id;
