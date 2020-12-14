@@ -6,3 +6,4 @@ export * from "./time";
 export * from "./time-stamp";
 export * from "./uuid";
 export * from "./json";
+export * from "./buffer";
