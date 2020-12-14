@@ -10,10 +10,14 @@ export class ByteArray implements BaseDataType {
     }
 
     static toSQLParameter(value: Buffer) {
-        return value.toString("hex");
+        if (value) {
+            return value.toString("hex");
+        }
     }
 
     static fromSQL(value: string) {
-        return Buffer.from(value, "hex");
+        if (value) {
+            return Buffer.from(value, "hex");
+        }
     }
 }
