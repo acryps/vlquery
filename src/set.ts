@@ -5,6 +5,7 @@ import { QueryProxy } from "./query-proxy";
 import { Query } from "./query";
 import { ForeignReference, PrimaryReference, RunContext } from ".";
 import { QueryColumnMapping } from "./query-operators/column-map";
+import { dataTypes } from "./data-type";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	static $audit: {
@@ -51,10 +52,10 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			INSERT INTO ${item.$meta.tableName} (
 				${properties.map(p => p.name)}
 			) VALUES (
-				${properties.map((p, i) => `$${i + 1}`)}
+				${properties.map((p, i) => `$${dataTypes[p.type].sqlParameterTransform(i + 1, p.value)}`)}
 			) RETURNING id
 		
-		`, properties.map(p => p.value)))[0].id;
+		`, properties.map(p => dataTypes[p.type].toSQLParameter(p.value))))[0].id;
 
 		item.id = id;
 
@@ -85,12 +86,12 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		await DbClient.query(`
 		
 			UPDATE ${item.$meta.tableName} 
-			SET ${properties.map((p, i) => `${p.name} = $${i + 2}`)}
+			SET ${properties.map((p, i) => `${p.name} = $${dataTypes[p.type].sqlParameterTransform(i + 2, p.value)}`)}
 			WHERE id = $1
 		
 		`, [
 			item.id,
-			...properties.map(p => p.value)
+			...properties.map(p => dataTypes[p.type].toSQLParameter(p.value))
 		]);
 
 		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
@@ -253,7 +254,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			const map = columns.find(c => c.lastComponent == col);
 
 			if (map) {
-				model[col] = raw[map.name];
+				model[col] = dataTypes[map.type].fromSQL(raw[map.name]);
 			}
 		}
 
