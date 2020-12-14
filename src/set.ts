@@ -52,7 +52,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			INSERT INTO ${item.$meta.tableName} (
 				${properties.map(p => p.name)}
 			) VALUES (
-				${properties.map((p, i) => `${dataTypes[p.type].sqlParameterTransform(i + 1, p.value)}`)}
+				${properties.map((p, i) => dataTypes[p.type].sqlParameterTransform(i + 1, p.value))}
 			) RETURNING id
 		
 		`, properties.map(p => dataTypes[p.type].toSQLParameter(p.value))))[0].id;
@@ -86,7 +86,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		await DbClient.query(`
 		
 			UPDATE ${item.$meta.tableName} 
-			SET ${properties.map((p, i) => `${p.name} = $${dataTypes[p.type].sqlParameterTransform(i + 2, p.value)}`)}
+			SET ${properties.map((p, i) => `${p.name} = ${dataTypes[p.type].sqlParameterTransform(i + 2, p.value)}`)}
 			WHERE id = $1
 		
 		`, [
