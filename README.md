@@ -19,7 +19,7 @@ await authorsFirstBookFrom2001.update();
 </pre>
 
 ## Examples
-[Simple Example Project](https://github.com/levvij/vlquery-example)
+[Simple Example Project](https://github.com/levvij/vlquery-example)<br>
 [Using audits with an express server](https://github.com/levvij/vlquery-audit-example)
 
 ## Documentation
