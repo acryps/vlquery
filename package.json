@@ -13,7 +13,7 @@
 		"vlquery": "bin/vlquery.js"
 	},
 	"author": "Levi Hechenberger",
-	"license": "ISC",
+	"license": "GPL-3.0-only",
 	"dependencies": {
 		"@types/node": "^14.6.2",
 		"esprima": "^4.0.1",
