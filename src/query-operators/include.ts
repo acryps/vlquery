@@ -87,7 +87,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 
 				// only search for extisting join if on the first level
 				if (extent == this.query.rootExtent) {
-					const join = this.query.joins.find(j => j.table == meta.tableName);
+					const join = this.query.joins.find(j => j.table == meta.tableName && j.column == proxy.$meta.columns[reference.$column].name);
 
 					if (join) {
 						targetExtent = join;
