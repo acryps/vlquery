@@ -2,6 +2,7 @@ import { Client } from "pg";
 import * as fs from "fs";
 import * as pathTools from "path";
 import { config } from "../config";
+import { constants } from "buffer";
 
 export function createContext() {
 	const client = new Client(config.context.connection);
@@ -124,7 +125,8 @@ import {
 						ON tc.constraint_name = kcu.constraint_name
 					JOIN information_schema.constraint_column_usage AS ccu
 					ON ccu.constraint_name = tc.constraint_name
-				WHERE constraint_type = 'FOREIGN KEY' AND (tc.table_name = $1 OR ccu.table_name = $1)
+				WHERE constraint_type = 'FOREIGN KEY' 
+					AND (tc.table_name = $1 OR ccu.table_name = $1)
 			`, [table])).rows;
 
 			let constr = ``;
@@ -138,7 +140,11 @@ import {
 
 				const parts = constraint.constraint_name.split("__");
 
-				if (constraint.table_name == table) {
+				if (parts.length != 2) {
+					throw new Error(`Invalid constraint name '${constraint.constraint_name}' from ${constraint.table_name}.${constraint.column_name} to ${constraint.foreign_table_name}.id`);
+				} 
+
+				if (constraint.table_name == table && parts[0]) {
 					constr += `
 		this.$${convertToModelName(parts[0])} = new ForeignReference<${convertToClassName(constraint.foreign_table_name)}>(
 			this,
@@ -174,7 +180,7 @@ import {
 					`;
 				}
 				
-				if (constraint.foreign_table_name == table) {
+				if (constraint.foreign_table_name == table && parts[1]) {
 					constr += `
 		this.${convertToModelName(parts[1])} = new PrimaryReference<${convertToClassName(constraint.table_name)}, ${convertToQueryProxyName(constraint.table_name)}>(
 			this,

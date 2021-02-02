@@ -45,6 +45,26 @@ author.<b>books</b>.toArray();
 
 You can use `_` in a references name to make it uppercase in the context
 
+### Hide Reference
+You can use empty constraint names to hide references from models
+<pre>
+CREATE TABLE localized_text (
+	id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+	en TEXT,
+	de TEXT,
+	ru TEXT
+);
+
+CREATE TABLE category (
+	id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+	localized_title_id UUID CONSTRAINT <b>localized_title__</b> REFERENCES localized_text (id)
+);
+</pre>
+
+This will create a `localizedTitle` reference from `category` to `LocalizedText` without adding a reference from `LocalizedText` to `Category`
+
 ## Deactivate instead of delete
 vlquery supports deactivating rows instead of deleting them. 
 References will be checked by the framework.
