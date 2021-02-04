@@ -1,6 +1,6 @@
 import { QueryType } from "../query-proxy";
 
-export class QueryString extends QueryType {
+export class QueryString extends String {
 	valueOf(): string {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
