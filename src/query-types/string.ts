@@ -17,3 +17,11 @@ export class QueryString extends QueryType {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
 }
+
+declare global {
+	interface String {
+		startsWith(value: string | QueryString): boolean;
+		endsWith(value: string | QueryString): boolean;
+		includes(value: string | QueryString): boolean;
+	}
+}
