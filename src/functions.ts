@@ -29,14 +29,14 @@ export const queryFunctions = {
 	includedIn: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} = ANY (${fragment.call.parameters[0].toSQL()})`),
 
 	// string operators
-	startsWith: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} LIKE ${fragment.call.parameters[0].toSQL()} || '%'`),
-	startOf: new QueryFunction(1, fragment => `${fragment.call.parameters[0].toSQL()} LIKE ${fragment.call.source.toSQL()} || '%'`),
+	startsWith: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} LIKE ${fragment.call.parameters[0].toSQL()} || '%'`),
+	startOf: new QueryFunction(1, fragment => `${fragment.call.parameters[0].toSQL()} LIKE ${fragment.call.source.toSQL()} || '%'`),
 
 	endsWith: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} LIKE '%' || ${fragment.call.parameters[0].toSQL()}`),
 	endOf: new QueryFunction(1, fragment => `${fragment.call.parameters[0].toSQL()} LIKE '%' || ${fragment.call.source.toSQL()}`),
 
-	includes: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} LIKE '%' || ${fragment.call.parameters[0].toSQL()} || '%'`),
-	substringOf: new QueryFunction(1, fragment => `${fragment.call.parameters[0].toSQL()} LIKE '%' || ${fragment.call.source.toSQL()} || '%'`),
+	includes: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} LIKE '%' || ${fragment.call.parameters[0].toSQL()} || '%'`),
+	substringOf: new QueryFunction(1, fragment => `${fragment.call.parameters[0].toSQL()} LIKE '%' || ${fragment.call.source.toSQL()} || '%'`),
 
 	// generic
 	valueOf: new QueryFunction(0, fragment => fragment.call.source.toSQL())

@@ -3,7 +3,7 @@ import { ByteArray } from "./byte-array";
 
 export * from "./byte-array";
 
-export const dataTypes: { [name: string]: typeof BaseDataType } = {
+export const dataTypes: { [name: string]: typeof BaseDataType } = {
     bytea: ByteArray,
 
     text: BaseDataType,
