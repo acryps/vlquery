@@ -5,15 +5,15 @@ export class QueryString extends QueryType {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
 
-	startsWith(value: string): boolean {
+	startsWith(value: string | QueryString): boolean {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
 
-	endsWith(value: string): boolean {
+	endsWith(value: string | QueryString): boolean {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
 
-	includes(value: string): boolean {
+	includes(value: string | QueryString): boolean {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
 }
