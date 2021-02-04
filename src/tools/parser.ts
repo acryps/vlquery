@@ -105,10 +105,10 @@ export function compileQueries() {
 				if (path[0] == itemParamName) {
 					config.compile.verbose && console.log(`CALL '${path.join("' -> '")}'`);
 
-					const parameters = expression.arguments.map(a => parseFilter(a, itemParamName, content));
-
-					return `{ call: { to: ${JSON.stringify(path.slice(1))}, parameters: [${parameters}] } }`;
+					return `{ call: { to: ${JSON.stringify(path.slice(1))}, parameters: [${expression.arguments.map(a => parseFilter(a, itemParamName, content))}] } }`;
 				}
+
+				
 			} else if (expression.type == "UnaryExpression") {
 				if (expression.operator == "!") {
 					throw new Error(`Operator ! is ambiguous: Use == null or == false.`);
