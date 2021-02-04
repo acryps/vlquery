@@ -222,7 +222,7 @@ import {
 					body += `${convertToModelName(column.column_name)}: ${type};\n\t`;
 					
 					proxyBody += `
-	get ${convertToModelName(column.column_name)}(): ${proxyType} {
+	get ${convertToModelName(column.column_name)}(): Partial<${proxyType}> {
 		throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
 	}
 				`;
