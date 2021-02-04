@@ -17,6 +17,10 @@ export class DbClient {
 		const names = Object.keys(params).sort().reverse();
 		let data = [];
 
+		if (process.env.VLQUERY_LOG_SQL) {
+			console.log(sql);
+		}
+
 		for (let name of names) {
 			sql = sql.split(`@${name}`).join(`$${data.length + 1}`);
 
