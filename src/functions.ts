@@ -30,7 +30,7 @@ export const queryFunctions = {
 
 	// string operators
 	startsWith: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} LIKE ${fragment.call.parameters[0].toSQL()} || '%'`),
-	startsOf: new QueryFunction(1, fragment => `${fragment.call.parameters[0].toSQL()} LIKE ${fragment.call.source.toSQL()} || '%'`),
+	startOf: new QueryFunction(1, fragment => `${fragment.call.parameters[0].toSQL()} LIKE ${fragment.call.source.toSQL()} || '%'`),
 
 	endsWith: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} LIKE '%' || ${fragment.call.parameters[0].toSQL()}`),
 	endOf: new QueryFunction(1, fragment => `${fragment.call.parameters[0].toSQL()} LIKE '%' || ${fragment.call.source.toSQL()}`),
