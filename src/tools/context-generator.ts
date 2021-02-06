@@ -127,6 +127,7 @@ import {
 					ON ccu.constraint_name = tc.constraint_name
 				WHERE constraint_type = 'FOREIGN KEY' 
 					AND (tc.table_name = $1 OR ccu.table_name = $1)
+				GROUP BY tc.constraint_name, tc.table_name, kcu.column_name, foreign_table_name, foreign_column_name
 			`, [table])).rows;
 
 			let constr = ``;
