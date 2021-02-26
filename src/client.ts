@@ -25,13 +25,19 @@ export class DbClient {
 	async reconnect() {
 		this.connected = false;
 
+		console.log("econnecting...");
+
 		this.connect().then(() => {
+			console.log("econnected");
+
 			while (this.stalledRequests.length) {
 				const request = this.stalledRequests.pop();
 
 				this.query(request.query, request.data);
 			}
-		}).catch(() => {
+		}).catch(error => {
+			console.warn("could not reconnect", error);
+
 			setTimeout(() => {
 				this.reconnect();
 			}, DbClient.reconnectInterval);
