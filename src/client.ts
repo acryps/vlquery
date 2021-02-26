@@ -2,20 +2,21 @@ import { Client } from "pg";
 
 export class DbClient {
 	static connectedClient: DbClient;
+	static reconnectInterval = 2000;
 	
 	connection: Client;
 	connected: boolean;
 
 	stalledRequests: StalledDbRequest[] = [];
 
-	constructor(configuration?) {
-		this.connection = new Client(configuration);
+	constructor(private configuration?) {}
+
+	async connect() {
+		this.connection = new Client(this.configuration);
 
 		this.connection.on("error", () => this.reconnect());
 		this.connection.on("end", () => this.reconnect());
-	}
 
-	async connect() {
 		await this.connection.connect();
 
 		this.connected = true;
@@ -30,6 +31,10 @@ export class DbClient {
 
 				this.query(request.query, request.data);
 			}
+		}).catch(() => {
+			setTimeout(() => {
+				this.reconnect();
+			}, DbClient.reconnectInterval);
 		});
 	}
 
