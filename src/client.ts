@@ -61,18 +61,37 @@ export class DbClient {
 
 		const names = Object.keys(params).sort().reverse();
 		let data = [];
+		let query = sql;
 
 		if (process.env.VLQUERY_LOG_SQL) {
-			console.log(sql);
+			console.log(query);
 		}
 
 		for (let name of names) {
-			sql = sql.split(`@${name}`).join(`$${data.length + 1}`);
+			query = query.split(`@${name}`).join(`$${data.length + 1}`);
 
 			data.push(params[name]);
 		}
-		
-		return (await this.connection.query(sql, params)).rows;
+
+		try {
+			return (await this.connection.query(query, params)).rows;
+		} catch (error) {
+			console.warn("query failed", error);
+
+			if (this.connected) {
+				throw error;
+			} else {
+				const stalledRequest = new StalledDbRequest();
+				stalledRequest.query = sql;
+				stalledRequest.data = params;
+
+				this.stalledRequests.push(stalledRequest);
+
+				return new Promise(done => {
+					stalledRequest.oncomplete = data => done(data);
+				});
+			}
+		}
 	}
 
 	static async query(sql: string, params: any[]) {
