@@ -335,6 +335,16 @@ export class DbContext {
 			context += `\n
 export class db {
 	${sets.join("\n\t")}
+
+	findSet(modelType) {
+		for (let key in this) {
+			if (this[key] instanceof DbSet) {
+				if ((this[key] as any).modelConstructor == modelType) {
+					return this[key];
+				}
+			}
+		}
+	}
 };`;
 		}
 
