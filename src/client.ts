@@ -3,6 +3,7 @@ import { Client } from "pg";
 export class DbClient {
 	static connectedClient: DbClient;
 	static reconnectInterval = 2000;
+	static reconnecting = false;
 	
 	connection: Client;
 	connected: boolean;
@@ -22,12 +23,20 @@ export class DbClient {
 		this.connected = true;
 	}
 
-	async reconnect() {
+	reconnect() {
 		this.connected = false;
+
+		if (DbClient.reconnecting) {
+			return
+		}
+
+		DbClient.reconnecting = true;
 
 		console.log("reconnecting...");
 
 		this.connect().then(() => {
+			DbClient.reconnecting = false;
+			
 			console.log(`reconnected, flushing ${this.stalledRequests.length} stalled requests`);
 
 			while (this.stalledRequests.length) {
@@ -41,6 +50,8 @@ export class DbClient {
 			console.warn("could not reconnect", error);
 
 			setTimeout(() => {
+				DbClient.reconnecting = false;
+
 				this.reconnect();
 			}, DbClient.reconnectInterval);
 		});
