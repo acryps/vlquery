@@ -84,12 +84,12 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		await DbClient.query(`
 		
 			UPDATE ${item.$meta.tableName} 
-			SET ${properties.map((p, i) => `${p.name} = ${dataTypes[p.type].sqlParameterTransform(i + 2, p.value)}`)}
+			SET ${properties.map((p, i) => `${p.name} = ${(dataTypes[p.type] || Enum).sqlParameterTransform(i + 2, p.value)}`)}
 			WHERE id = $1
 		
 		`, [
 			item.id,
-			...properties.map(p => dataTypes[p.type].toSQLParameter(p.value))
+			...properties.map(p => (dataTypes[p.type] || Enum).toSQLParameter(p.value))
 		]);
 
 		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
