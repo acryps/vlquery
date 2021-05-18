@@ -14,10 +14,8 @@ export function createContext() {
 		float: "number",
 		real: "number",
 		uuid: "string",
-		"timestamp without time zone": "Date",
-		"timestamp with time zone": "Date",
-		"time without time zone": "Date",
-		"time with time zone": "Date",
+		timestamp: "Date",
+		time: "Date",
 		date: "Date",
 		json: "any",
 		jsonb: "any",
@@ -31,10 +29,8 @@ export function createContext() {
 		real: "QueryNumber",
 		boolean: "QueryBoolean",
 		uuid: "QueryUUID",
-		"timestamp without time zone": "QueryTimeStamp",
-		"timestamp with time zone": "QueryTimeStamp",
-		"time without time zone": "QueryTime",
-		"time with time zone": "QueryTime",
+		timestamp: "QueryTimeStamp",
+		time: "QueryTime",
 		date: "QueryDate",
 		json: "QueryJSON",
 		jsonb: "QueryJSON",
@@ -55,6 +51,23 @@ export function createContext() {
 
 		function convertToQueryProxyName(name: string) {
 			return `${convertToClassName(name)}QueryProxy`;
+		}
+
+		let enums = {};
+
+		for (let row of (await client.query(`
+			SELECT 
+				t.typname as name, 
+				e.enumlabel as value
+			FROM pg_type t 
+				JOIN pg_enum e ON t.oid = e.enumtypid  
+				JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+		`)).rows) {
+			if (row.name in enums) {
+				enums[row.name].push(row.value);
+			} else {
+				enums[row.name] = [row.value];
+			}
 		}
 
 		const tables = (await client.query(`
@@ -91,13 +104,21 @@ import {
 			} 
 		}
 
+		for (let enumeration in enums) {
+			context += `
+export class ${enumeration} {
+	${enums[enumeration].map(e => `static readonly ${JSON.stringify(e.value)} = ${JSON.stringify(e.value)};`).join("\n\t")}
+}
+`;
+		}
+
 		for (let table of tables.map(t => t.tablename)) {
 			config.compile.verbose && console.group(table);
 
 			const columns = (await client.query(`
 				SELECT 
 					column_name,
-					data_type
+					udt_name AS data_type
 				FROM INFORMATION_SCHEMA.COLUMNS 
 					WHERE table_name = $1${config.context.active ? ` AND column_name NOT IN ('${config.context.active}')`: ""}
 			`, [
@@ -205,10 +226,14 @@ import {
 			const columnMappings = {};
 
 			for (let column of columns) {
-				const type = typeMapping[column.data_type];
-				const proxyType = proxyTypeMapping[column.data_type];
+				let type = typeMapping[column.data_type];
+				let proxyType = proxyTypeMapping[column.data_type];
 
-				if (!type || !proxyType) {
+				if (column.data_type in enums) {
+					type = convertToClassName(column.data_type);
+				}
+				
+				if (!type) {
 					throw new Error(`Unsupported column type '${column.data_type}'`);
 				}
 
@@ -223,7 +248,7 @@ import {
 					body += `${convertToModelName(column.column_name)}: ${type};\n\t`;
 					
 					proxyBody += `
-	get ${convertToModelName(column.column_name)}(): Partial<${proxyType}> {
+	get ${convertToModelName(column.column_name)}(): ${column.data_type in enums ? enums[column.data_type].map(e => JSON.stringify(e)).join(" | ") : `Partial<${proxyType}>`}> {
 		throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
 	}
 				`;
