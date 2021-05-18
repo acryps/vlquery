@@ -6,6 +6,7 @@ import { Query } from "./query";
 import { ForeignReference, PrimaryReference, RunContext } from ".";
 import { QueryColumnMapping } from "./query-operators/column-map";
 import { dataTypes } from "./data-type";
+import { BaseDataType } from "./data-type/base";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	static $audit: {
@@ -50,8 +51,8 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		const id = (await DbClient.query(`INSERT INTO ${item.$meta.tableName} ( ${
 			properties.map(p => p.name)
 		} ) VALUES ( ${
-			properties.map((p, i) => dataTypes[p.type].sqlParameterTransform(i + 1, p.value))
-		} ) RETURNING id`, properties.map(p => dataTypes[p.type].toSQLParameter(p.value))))[0].id;
+			properties.map((p, i) => (dataTypes[p.type] || BaseDataType).sqlParameterTransform(i + 1, p.value))
+		} ) RETURNING id`, properties.map(p => (dataTypes[p.type] || BaseDataType).toSQLParameter(p.value))))[0].id;
 
 		item.id = id;
 
