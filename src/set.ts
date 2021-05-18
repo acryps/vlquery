@@ -7,6 +7,7 @@ import { ForeignReference, PrimaryReference, RunContext } from ".";
 import { QueryColumnMapping } from "./query-operators/column-map";
 import { dataTypes } from "./data-type";
 import { BaseDataType } from "./data-type/base";
+import { Enum } from "./data-type/enum";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	static $audit: {
@@ -51,8 +52,8 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		const id = (await DbClient.query(`INSERT INTO ${item.$meta.tableName} ( ${
 			properties.map(p => p.name)
 		} ) VALUES ( ${
-			properties.map((p, i) => (dataTypes[p.type] || BaseDataType).sqlParameterTransform(i + 1, p.value))
-		} ) RETURNING id`, properties.map(p => (dataTypes[p.type] || BaseDataType).toSQLParameter(p.value))))[0].id;
+			properties.map((p, i) => (dataTypes[p.type] || Enum).sqlParameterTransform(i + 1, p.value))
+		} ) RETURNING id`, properties.map(p => (dataTypes[p.type] || Enum).toSQLParameter(p.value))))[0].id;
 
 		item.id = id;
 
@@ -251,7 +252,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			const map = columns.find(c => c.lastComponent == col);
 
 			if (map) {
-				model[col] = dataTypes[map.type].fromSQL(raw[map.name]);
+				model[col] = (dataTypes[map.type] || Enum).fromSQL(raw[map.name]);
 			}
 		}
 
