@@ -106,8 +106,8 @@ import {
 
 		for (let enumeration in enums) {
 			context += `
-export class ${enumeration} {
-	${enums[enumeration].map(e => `static readonly ${JSON.stringify(e.value)} = ${JSON.stringify(e.value)};`).join("\n\t")}
+export class ${convertToClassName(enumeration)} {
+	${enums[enumeration].map(e => `static readonly ${convertToModelName(e)} = ${JSON.stringify(e)};`).join("\n\t")}
 }
 `;
 		}
@@ -248,7 +248,7 @@ export class ${enumeration} {
 					body += `${convertToModelName(column.column_name)}: ${type};\n\t`;
 					
 					proxyBody += `
-	get ${convertToModelName(column.column_name)}(): ${column.data_type in enums ? enums[column.data_type].map(e => JSON.stringify(e)).join(" | ") : `Partial<${proxyType}>`}> {
+	get ${convertToModelName(column.column_name)}(): ${column.data_type in enums ? enums[column.data_type].map(e => JSON.stringify(e)).join(" | ") : `Partial<${proxyType}>`} {
 		throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
 	}
 				`;
