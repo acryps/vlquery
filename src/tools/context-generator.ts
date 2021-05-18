@@ -70,6 +70,10 @@ export function createContext() {
 			}
 		}
 
+		for (let name in enums) {
+			enums[name] = enums[name].sort();
+		}
+
 		const tables = (await client.query(`
 			SELECT tablename 
 			FROM pg_tables
