@@ -1,6 +1,8 @@
 <img src="doc/assets/logo.svg" height="100">
 
 # vlquery TypeScript ORM
+[![npm version](https://badge.fury.io/js/vlquery.svg)](https://badge.fury.io/js/vlquery)
+
 Simple to use TypeScript based database first ORM for postgres.
 
 Here is a little example:
