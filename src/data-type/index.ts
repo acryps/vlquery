@@ -9,6 +9,7 @@ export const dataTypes: { [name: string]: typeof BaseDataType } = {
     text: BaseDataType,
 	integer: BaseDataType,
 	float: BaseDataType,
+	float4: BaseDataType,
 	real: BaseDataType,
 	boolean: BaseDataType,
 	uuid: BaseDataType,
