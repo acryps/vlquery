@@ -7,6 +7,7 @@ export const dataTypes: { [name: string]: typeof BaseDataType } = {
     bytea: ByteArray,
 
     text: BaseDataType,
+	int4: BaseDataType,
 	integer: BaseDataType,
 	float: BaseDataType,
 	float4: BaseDataType,
