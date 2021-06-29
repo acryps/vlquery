@@ -172,7 +172,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return properties;
 	}
 
-	async find(id: string) {
+	async find(id: string | number) {
 		return await this.first(item => item.id == id);
 	}
 
