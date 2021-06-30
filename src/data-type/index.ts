@@ -16,7 +16,7 @@ export const dataTypes: { [name: string]: typeof BaseDataType } = {
 	boolean: BaseDataType,
 	uuid: BaseDataType,
 	timestamp: BaseDataType,
-	timestampz: BaseDataType,
+	timestamptz: BaseDataType,
 	time: BaseDataType,
     date: BaseDataType,
     json: BaseDataType,
