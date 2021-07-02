@@ -102,6 +102,7 @@ import {
 	QueryDate,
 	QueryBoolean,
 	QueryBuffer,
+	QueryEnum,
 	ForeignReference,
 	PrimaryReference
 } from "vlquery";
@@ -117,7 +118,7 @@ import {
 
 		for (let enumeration in enums) {
 			context += `
-export class ${convertToClassName(enumeration)} {
+export class ${convertToClassName(enumeration)} extends QueryEnum {
 	${enums[enumeration].map(e => `static readonly ${convertToModelName(e)} = ${JSON.stringify(e)};`).join("\n\t")}
 }
 `;

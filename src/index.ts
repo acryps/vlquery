@@ -7,3 +7,4 @@ export * from "./reference";
 export * from "./set";
 export * from "./query-types";
 export * from "./run-context";
+export * from "./enum";
