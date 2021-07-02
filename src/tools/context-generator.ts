@@ -257,11 +257,13 @@ export class ${convertToClassName(enumeration)} {
 
 				body += `${convertToModelName(column.column_name)}: ${type};\n\t`;
 					
-				proxyBody += `
+				if (column.column_name != "id") {
+					proxyBody += `
 	get ${convertToModelName(column.column_name)}(): ${column.data_type in enums ? enums[column.data_type].map(e => JSON.stringify(e)).join(" | ") : `Partial<${proxyType}>`} {
 		throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
 	}
-				`;
+					`;
+				}
 			}
 
 			config.compile.verbose && console.groupEnd();
