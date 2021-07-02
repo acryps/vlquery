@@ -28,15 +28,15 @@ export class QueryOrder<TModel extends Entity<TQueryModel>, TQueryModel extends 
 			const join = new QueryJoin(
 				query,
 				this.extent,
-				(new reference.$relation()).$meta.tableName,
-				reference.$item.$meta.columns[reference.$column].name
+				(new reference.$relation()).$$meta.tableName,
+				reference.$$item.$$meta.columns[reference.$column].name
 			);
 
 			this.extent = join.extent;
-			set = new reference.$relation().$meta.set;
+			set = new reference.$relation().$$meta.set;
 		}
 
-		this.column = set.$meta.columns[properties[properties.length - 1]];
+		this.column = set.$$meta.columns[properties[properties.length - 1]];
 	}
 
 	toSQL() {

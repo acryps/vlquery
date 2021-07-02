@@ -23,12 +23,12 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		public runContext?: RunContext
 	) {}
 	
-	get $meta() {
-		return new this.modelConstructor().$meta;
+	get $$meta() {
+		return new this.modelConstructor().$$meta;
 	}
 	
 	async create(item: TModel, comment?: string) {
-		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.tableName) {
 			if (DbSet.$audit.commentRequired && !comment) {
 				throw new Error("No audit comment for create set!");
 			}
@@ -40,16 +40,16 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 		const properties = this.getStoredProperties(item);
 
-		if (item.$meta.active) {
+		if (item.$$meta.active) {
 			properties.push({
 				key: null,
-				name: item.$meta.active,
+				name: item.$$meta.active,
 				value: true,
 				type: "boolean"
 			});
 		}
 
-		const id = (await DbClient.query(`INSERT INTO ${item.$meta.tableName} ( ${
+		const id = (await DbClient.query(`INSERT INTO ${item.$$meta.tableName} ( ${
 			properties.map(p => p.name)
 		} ) VALUES ( ${
 			properties.map((p, i) => (dataTypes[p.type] || Enum).sqlParameterTransform(i + 1, p.value))
@@ -57,7 +57,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 		item.id = id;
 
-		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.tableName) {
 			(await DbSet.$audit.createAudit("create", comment, item, this.runContext)).create();
 		}
 
@@ -69,7 +69,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			throw new Error("Cannot update entity, an id is required!");
 		}
 
-		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.tableName) {
 			if (DbSet.$audit.commentRequired && !comment) {
 				throw new Error("No audit comment for update set!");
 			}
@@ -83,7 +83,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 		await DbClient.query(`
 		
-			UPDATE ${item.$meta.tableName} 
+			UPDATE ${item.$$meta.tableName} 
 			SET ${properties.map((p, i) => `${p.name} = ${(dataTypes[p.type] || Enum).sqlParameterTransform(i + 2, p.value)}`)}
 			WHERE id = $1
 		
@@ -92,7 +92,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			...properties.map(p => (dataTypes[p.type] || Enum).toSQLParameter(p.value))
 		]);
 
-		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.tableName) {
 			(await DbSet.$audit.createAudit("update", comment, item, this.runContext)).create();
 		}
 
@@ -100,7 +100,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	}
 
 	async delete(item: TModel, comment?: string) {
-		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.tableName) {
 			if (DbSet.$audit.commentRequired && !comment) {
 				throw new Error("No audit comment for delete set!");
 			}
@@ -117,15 +117,15 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 				const count = await column.count;
 
 				if (count) {
-					throw new Error(`Cannot delete '${item.id}' from '${this.$meta.tableName}'. ${count} items from '${new column.$relation().$meta.tableName}' still reference it`);
+					throw new Error(`Cannot delete '${item.id}' from '${this.$$meta.tableName}'. ${count} items from '${new column.$relation().$$meta.tableName}' still reference it`);
 				}
 			}
 		}
 
-		if (item.$meta.active) {
+		if (item.$$meta.active) {
 			await DbClient.query(`
 			
-				UPDATE ${item.$meta.tableName} 
+				UPDATE ${item.$$meta.tableName} 
 				SET _active = false
 				WHERE id = $1
 			
@@ -135,7 +135,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		} else {
 			await DbClient.query(`
 			
-				DELETE FROM ${item.$meta.tableName} 
+				DELETE FROM ${item.$$meta.tableName} 
 				WHERE id = $1
 			
 			`, [
@@ -143,7 +143,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			]);
 		}
 
-		if (DbSet.$audit && DbSet.$audit.table != this.$meta.tableName) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.tableName) {
 			(await DbSet.$audit.createAudit("delete", comment, item, this.runContext)).create();
 		}
 	}
@@ -157,7 +157,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		})[] = [];
 		
 		for (let key in item) {
-			const col = item.$meta.columns[key];
+			const col = item.$$meta.columns[key];
 
 			if (col) {
 				properties.push({
@@ -248,7 +248,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 		const columns = leaf.filter(c => c.path.length == path.length + 1);
 
-		for (let col in model.$meta.columns) {
+		for (let col in model.$$meta.columns) {
 			const map = columns.find(c => c.lastComponent == col);
 
 			if (map) {
@@ -265,7 +265,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 				// check if id is null (empty relation target)
 				if (idMapping && raw[idMapping.name]) {
 					// construct prefetched item
-					const child = (new relation.$relation().$meta.set).constructObject(raw, columnMappings, [
+					const child = (new relation.$relation().$$meta.set).constructObject(raw, columnMappings, [
 						...path, 
 						key.replace("$", "")
 					]);
@@ -281,7 +281,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 			if (relation instanceof PrimaryReference && key in raw) {
 				if (raw[key]) {
-					const set = (new relation.$relation()).$meta.set;
+					const set = (new relation.$relation()).$$meta.set;
 
 					const items = raw[key].map(item => set.constructObject(item, columnMappings, [
 						...path,

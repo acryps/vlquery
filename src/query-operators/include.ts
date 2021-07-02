@@ -26,7 +26,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 			let set = proxy;
 
 			// add properties of root
-			for (let key in proxy.$meta.columns) {
+			for (let key in proxy.$$meta.columns) {
 				tree[key] = true;
 			}
 
@@ -38,7 +38,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 					leaf[item] = {};
 				}
 
-				for (let key in reference.$meta.columns) {
+				for (let key in reference.$$meta.columns) {
 					leaf[item][key] = true;
 				}
 
@@ -68,8 +68,8 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 		} 
 
 		for (let property in leaf) {
-			if (set.$meta.columns[property]) {
-				const col = set.$meta.columns[property];
+			if (set.$$meta.columns[property]) {
+				const col = set.$$meta.columns[property];
 
 				const node = new QueryIncludeNode();
 				node.name = col.name;
@@ -83,11 +83,11 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 			} else if (proxy[property] && proxy[property] instanceof ForeignReference) {
 				let targetExtent: QueryJoin<TModel, TQueryModel>;
 				const reference = proxy[property] as ForeignReference<TModel>;
-				const meta = (new reference.$relation()).$meta;
+				const meta = (new reference.$relation()).$$meta;
 
 				// only search for extisting join if on the first level
 				if (extent == this.query.rootExtent) {
-					const join = this.query.joins.find(j => j.table == meta.tableName && j.column == proxy.$meta.columns[reference.$column].name);
+					const join = this.query.joins.find(j => j.table == meta.tableName && j.column == proxy.$$meta.columns[reference.$column].name);
 
 					if (join) {
 						targetExtent = join;
@@ -100,7 +100,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 						this.query, 
 						extent, 
 						meta.tableName, 
-						proxy.$meta.columns[reference.$column].name
+						proxy.$$meta.columns[reference.$column].name
 					);
 
 					// remove the join form the root joins and add it to the indents joins
@@ -114,7 +114,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 				indent.merge(this.build(leaf[property], meta.set, targetExtent.extent, [...path, property]));
 			} else if (proxy[property] && proxy[property] instanceof PrimaryReference) {
 				const reference = proxy[property] as PrimaryReference<TModel, TQueryModel>;
-				const meta = (new reference.$relation()).$meta;
+				const meta = (new reference.$relation()).$$meta;
 
 				const group = new QueryIncludeIndentGroup();
 				group.mappedName = property;
@@ -176,7 +176,7 @@ class QueryIncludeIndent<TModel extends Entity<TQueryModel>, TQueryModel extends
 		const joins = [];
 
 		for (let child of this.childIndents) {
-			joins.push(`LEFT JOIN ( SELECT ${child.innerExtent.name}.${child.groupedColumn}, json_agg(${child.indent.toSelectSQL()}) AS _ FROM ${child.sourceTable} AS ${child.innerExtent.name} ${child.indent.joins.map(j => j.toSQL()).join(" ")} ${child.indent.toJoinSQL()}${this.query.set.$meta.active ? ` WHERE ${child.innerExtent.name}.${this.query.set.$meta.active}` : ""} GROUP BY ${child.innerExtent.name}.${child.groupedColumn} ) AS ${child.exportingExtent.name} ON ${child.parentExtent.name}.id = ${child.exportingExtent.name}.${child.groupedColumn}`);
+			joins.push(`LEFT JOIN ( SELECT ${child.innerExtent.name}.${child.groupedColumn}, json_agg(${child.indent.toSelectSQL()}) AS _ FROM ${child.sourceTable} AS ${child.innerExtent.name} ${child.indent.joins.map(j => j.toSQL()).join(" ")} ${child.indent.toJoinSQL()}${this.query.set.$$meta.active ? ` WHERE ${child.innerExtent.name}.${this.query.set.$$meta.active}` : ""} GROUP BY ${child.innerExtent.name}.${child.groupedColumn} ) AS ${child.exportingExtent.name} ON ${child.parentExtent.name}.id = ${child.exportingExtent.name}.${child.groupedColumn}`);
 		}
 
 		return joins.join("\n");

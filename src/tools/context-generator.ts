@@ -272,7 +272,7 @@ export class ${convertToQueryProxyName(table)} extends QueryProxy {
 }
 
 export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyName(table)}> {
-	$meta = {
+	$$meta = {
 		tableName: ${JSON.stringify(table)},
 		columns: ${JSON.stringify(columnMappings)},
 		get set(): DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> {
@@ -323,14 +323,14 @@ DbSet.$audit = {
 				return `
 		const object = {};
 
-		for (let key in entity.$meta.columns) {
+		for (let key in entity.$$meta.columns) {
 			object[key] = entity[key];
 		}
 
 		audit.${column} = object;
 				`.trim();
 			} else if (value == "entity") {
-				source = `entity.$meta.tableName;`;
+				source = `entity.$$meta.tableName;`;
 			} else if (value == "id") {
 				source = `entity.id;`;
 			}

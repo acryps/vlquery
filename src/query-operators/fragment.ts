@@ -96,7 +96,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 
 			for (let i = 0; i < tree.path.length; i++) {
 				const name = tree.path[i];
-				const component = set.$meta.columns[name];
+				const component = set.$$meta.columns[name];
 				const proxy = new set.modelConstructor();
 
 				if (component) {
@@ -113,7 +113,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 					if (i == tree.path.length - 1) {
 						// don't create join, just compare source column
 						this.path = {
-							column: reference.$item.$meta.columns[reference.$column].name,
+							column: reference.$$item.$$meta.columns[reference.$column].name,
 							extent
 						};
 					}
@@ -121,12 +121,12 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 						const join = new QueryJoin(
 							query,
 							extent,
-							(new reference.$relation()).$meta.tableName,
-							reference.$item.$meta.columns[reference.$column].name
+							(new reference.$relation()).$$meta.tableName,
+							reference.$$item.$$meta.columns[reference.$column].name
 						);
 
 						extent = join.extent;
-						set = new reference.$relation().$meta.set;
+						set = new reference.$relation().$$meta.set;
 					}
 				}
 				else {

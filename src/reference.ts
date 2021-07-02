@@ -7,13 +7,13 @@ export class ForeignReference<T extends Entity<QueryProxy>> {
 	private $stored;
 	
 	constructor(
-		public $item: Entity<QueryProxy>,
+		public $$item: Entity<QueryProxy>,
 		public $column?: string,
 		public $relation?: new () => T
 	) {}
 
 	get id(): string {
-		return this.$item[this.$column];
+		return this.$$item[this.$column];
 	}
 
 	set id(value: string) {
@@ -21,7 +21,7 @@ export class ForeignReference<T extends Entity<QueryProxy>> {
 			delete this.$stored;
 		}
 
-		this.$item[this.$column] = value;
+		this.$$item[this.$column] = value;
 	}
 
 	async fetch?(): Promise<T> {
@@ -31,7 +31,7 @@ export class ForeignReference<T extends Entity<QueryProxy>> {
 
 		const source = new this.$relation();
 		
-		return await source.$meta.set.find(this.id) as T;
+		return await source.$$meta.set.find(this.id) as T;
 	}
 
 	get hasPrefetched() {
@@ -43,7 +43,7 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 	private $stored;
 	
 	constructor(
-		public $item: Entity<QueryProxy>,
+		public $$item: Entity<QueryProxy>,
 		public $column: string,
 		public $relation: new () => TSource
 	) {}
@@ -51,11 +51,11 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 	private toQuery() {
 		const itemProxy = new this.$relation();
 
-		return new Query(itemProxy.$meta.set, [{
+		return new Query(itemProxy.$$meta.set, [{
 			compare: {
 				operator: "=",
 				left: { path: [ this.$column ] },
-				right: { value: this.$item.id }
+				right: { value: this.$$item.id }
 			}
 		}]) as unknown as Queryable<TSource, TQueryProxy>;
 	}

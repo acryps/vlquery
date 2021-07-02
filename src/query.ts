@@ -138,8 +138,8 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	toSQL() {
 		const wheres = this.conditions.map(c => c.toSQL());
 
-		if (this.set.$meta.active) {
-			wheres.unshift(`${this.rootExtent.name}.${this.set.$meta.active}`);
+		if (this.set.$$meta.active) {
+			wheres.unshift(`${this.rootExtent.name}.${this.set.$$meta.active}`);
 		}
 
 		let select;
@@ -150,7 +150,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 			if (!this.includeClause) {
 				const tree = {};
 
-				for (let column in this.set.$meta.columns) {
+				for (let column in this.set.$$meta.columns) {
 					tree[column] = true;
 				}
 
@@ -162,7 +162,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 			select = `${this.includeClause.toSelectSQL()} AS _`;
 		}
 
-		return `SELECT ${select} FROM ${this.set.$meta.tableName} AS ${this.rootExtent.name} ${
+		return `SELECT ${select} FROM ${this.set.$$meta.tableName} AS ${this.rootExtent.name} ${
 			[
 				...this.joins,
 				...this.includeClause.rootLeaf.joins
