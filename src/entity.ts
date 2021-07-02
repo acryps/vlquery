@@ -10,7 +10,7 @@ export class Entity<TQueryProxy extends QueryProxy> {
 				name: string,
 				type: string
 			}
-		},
+		} | any,
 		set: DbSet<Entity<TQueryProxy>, TQueryProxy>,
 		active?: string
 	};
