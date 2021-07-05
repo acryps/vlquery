@@ -12,11 +12,11 @@ export class ForeignReference<T extends Entity<QueryProxy>> {
 		public $relation?: new () => T
 	) {}
 
-	get id(): string {
+	get id(): string | number {
 		return this.$$item[this.$column];
 	}
 
-	set id(value: string) {
+	set id(value: string | number) {
 		if (this.$stored) {
 			delete this.$stored;
 		}
