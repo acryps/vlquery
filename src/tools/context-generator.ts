@@ -200,7 +200,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 				throw new Error("Invalid null id. Save the referenced model prior to creating a reference to it.");
 			}
 
-			this.${convertToModelName(constraint.column_name)} = value.id;
+			this.${convertToModelName(constraint.column_name)} = ${columns.find(c => c.column_name == "id").data_type == "uuid" ? "value.id as string" : "+value.id"};
 		} else {
 			this.${convertToModelName(constraint.column_name)} = null;
 		}
