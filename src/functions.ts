@@ -4,43 +4,44 @@ import { QueryFragment } from "./query-operators/fragment";
 export class QueryFunction {
 	constructor(
 		public argCount: number | [number, number],
-		public converter: (fragment: QueryFragment<Entity<QueryProxy>, QueryProxy>) => string,
+		public converter: (fragment: QueryFragment<Entity<QueryProxy>, QueryProxy>, body: string, parameters: QueryFragment<Entity<QueryProxy>, QueryProxy>[]) => string,
 	) {}
 
-	toSQL(fragment: QueryFragment<Entity<QueryProxy>, QueryProxy>) {
-		if (typeof this.argCount == "number" && fragment.call.parameters.length != this.argCount) {
+	toSQL(fragment: QueryFragment<Entity<QueryProxy>, QueryProxy>, body, parameters) {
+		if (typeof this.argCount == "number" && parameters.length != this.argCount) {
 			throw new Error(`Invalid parameter count for query function`);
 		}
 
-		if (Array.isArray(this.argCount) && (fragment.call.parameters.length > Math.max(...this.argCount) || fragment.call.parameters.length < Math.min(...this.argCount))) {
+		if (Array.isArray(this.argCount) && (parameters.length > Math.max(...this.argCount) || parameters.length < Math.min(...this.argCount))) {
 			throw new Error(`Invalid parameter count for query function`);
 		}
 
-		return this.converter(fragment);
+		return this.converter(fragment, body, parameters);
 	}
 }
 
 export const queryFunctions = {
 	// date operators
-	isAfter: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} > ${fragment.call.parameters[0].toSQL()}`),
-	isBefore: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} < ${fragment.call.parameters[0].toSQL()}`),
+	isAfter: new QueryFunction(1, (fragment, body, parameters) => `${body} > ${parameters[0].toSQL()}`),
+	isBefore: new QueryFunction(1, (fragment, body, parameters) => `${body} < ${parameters[0].toSQL()}`),
 
 	// id array operators
-	includedIn: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} = ANY (${fragment.call.parameters[0].toSQL()})`),
+	includedIn: new QueryFunction(1, (fragment, body, parameters) => `${body} = ANY (${parameters[0].toSQL()})`),
 
-	// string operators
-	startsWith: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} LIKE ${fragment.call.parameters[0].toSQL()} || '%'`),
-	startOf: new QueryFunction(1, fragment => `${fragment.call.parameters[0].toSQL()} LIKE ${fragment.call.source.toSQL()} || '%'`),
+	// string search operators
+	startsWith: new QueryFunction(1, (fragment, body, parameters) => `${body} LIKE ${parameters[0].toSQL()} || '%'`),
+	startOf: new QueryFunction(1, (fragment, body, parameters) => `${parameters[0].toSQL()} LIKE ${body} || '%'`),
 
-	endsWith: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} LIKE '%' || ${fragment.call.parameters[0].toSQL()}`),
-	endOf: new QueryFunction(1, fragment => `${fragment.call.parameters[0].toSQL()} LIKE '%' || ${fragment.call.source.toSQL()}`),
+	endsWith: new QueryFunction(1, (fragment, body, parameters) => `${body} LIKE '%' || ${parameters[0].toSQL()}`),
+	endOf: new QueryFunction(1, (fragment, body, parameters) => `${parameters[0].toSQL()} LIKE '%' || ${body}`),
 
-	includes: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} LIKE '%' || ${fragment.call.parameters[0].toSQL()} || '%'`),
-	substringOf: new QueryFunction(1, fragment => `${fragment.call.parameters[0].toSQL()} LIKE '%' || ${fragment.call.source.toSQL()} || '%'`),
+	includes: new QueryFunction(1, (fragment, body, parameters) => `${body} LIKE '%' || ${parameters[0].toSQL()} || '%'`),
+	substringOf: new QueryFunction(1, (fragment, body, parameters) => `${parameters[0].toSQL()} LIKE '%' || ${body} || '%'`),
 
-	uppercase: new QueryFunction(0, fragment => `UPPER(${fragment.call.parameters[0].toSQL()})`),
-	lowercase: new QueryFunction(0, fragment => `LOWER(${fragment.call.parameters[0].toSQL()})`),
+	// string case operators
+	uppercase: new QueryFunction(0, (fragment, body, parameters) => `UPPER(${body})`),
+	lowercase: new QueryFunction(0, (fragment, body, parameters) => `LOWER(${body})`),
 
 	// generic
-	valueOf: new QueryFunction(0, fragment => fragment.call.source.toSQL())
+	valueOf: new QueryFunction(0, (fragment, body, parameters) =>body)
 }

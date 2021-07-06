@@ -29,8 +29,11 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 	};
 
 	call: {
-		parameters: QueryFragment<TModel, TQueryModel>[];
-		to: QueryFunction;
+		calls: {
+			to: QueryFunction,
+			parameters: QueryFragment<TModel, TQueryModel>[]
+		}[];
+
 		source: QueryFragment<TModel, TQueryModel>;
 	};
 
@@ -79,15 +82,15 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 		}
 
 		if (tree.call) {
-			const func = queryFunctions[tree.call.to[tree.call.to.length - 1]];
-
 			this.call = {
-				to: func,
-				parameters: tree.call.parameters.map(p => new QueryFragment<TModel, TQueryModel>(query, p)),
-				source: new QueryFragment<TModel, TQueryModel>(query, {
-					path: tree.call.to.slice(0, tree.call.to.length - 1)
-				})
-			};
+                calls: tree.call.filter(e => typeof e != "string").map(item => ({
+                    to: functions_1.queryFunctions[item.name],
+                    parameters: item.parameters.map(p => new QueryFragment(query, p))
+                })),
+                source: new QueryFragment(query, {
+                    path: tree.call.filter(e => typeof e == "string")
+                })
+            };
 		}
 
 		if (tree.path) {
@@ -170,7 +173,13 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 		}
 
 		if (this.call) {
-			return `(${this.call.to.toSQL(this)})`;
+			let body = this.call.source.toSQL();
+
+            for (let call of this.call.calls) {
+                body = call.to.toSQL(this, body, call.parameters);
+            }
+
+            return `(${body})`;
 		}
 
 		if (this.valueParameter) {

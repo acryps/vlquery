@@ -25,7 +25,7 @@ export function compileQueries() {
 		}
 
 		function parseFilter(expression, itemParamName: string, content: string) {
-			config.compile.verbose && console.log(`PARSE for ${itemParamName}: ${grab(expression)}`);
+			config.compile.verbose && console.log(`PARSE for ${itemParamName}: ${grab(expression)} [${expression.type}]`);
 		
 			if (expression.type == "LogicalExpression") {
 				config.compile.verbose && console.group(`LINK ${expression.operator}`);
@@ -91,24 +91,30 @@ export function compileQueries() {
 					return `{ path: ${JSON.stringify(path.slice(1))} }`;
 				}
 			} else if (expression.type == "CallExpression") {
-				const path = [];
-				let access = expression.callee;
-		
-				while (access.object) {
-					path.unshift(access.property.name);
-		
-					access = access.object;
-				}
-		
-				path.unshift(access.name);
+				let access = expression;
+                const stack = [];
 
-				if (path[0] == itemParamName) {
-					config.compile.verbose && console.log(`CALL '${path.join("' -> '")}'`);
+                while (access.object || access.callee) {
+                    if (access.type == "CallExpression") {
+                        stack.unshift({
+                            name: access.callee.property.name,
+                            arguments: access.arguments.map(a => parseFilter(a, itemParamName, content))
+                        });
 
-					return `{ call: { to: ${JSON.stringify(path.slice(1))}, parameters: [${expression.arguments.map(a => parseFilter(a, itemParamName, content))}] } }`;
-				}
+                        access = access.callee.object;
+                    } else if (access.type == "MemberExpression") {
+                        stack.unshift(access.property.name);
 
-				
+                        access = access.object;
+                    }
+                }
+
+                if (access.name == itemParamName) {
+                    return `{ call: { stack: [${stack.map(item => typeof item == "string" ? JSON.stringify(item) : `{
+                        execute: ${JSON.stringify(item.name)},
+                        parameters: [ ${item.arguments.join(", ")} ]
+                    }`)}] } }`;
+                }
 			} else if (expression.type == "UnaryExpression") {
 				if (expression.operator == "!") {
 					throw new Error(`Operator ! is ambiguous: Use == null or == false.`);
