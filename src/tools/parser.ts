@@ -111,7 +111,7 @@ export function compileQueries() {
 
                 if (access.name == itemParamName) {
                     return `{ call: { stack: [${stack.map(item => typeof item == "string" ? JSON.stringify(item) : `{
-                        execute: ${JSON.stringify(item.name)},
+                        name: ${JSON.stringify(item.name)},
                         parameters: [ ${item.arguments.join(", ")} ]
                     }`)}] } }`;
                 }
