@@ -335,7 +335,7 @@ DbSet.$audit = {
 			} else if (value == "entity") {
 				source = `entity.$$meta.tableName;`;
 			} else if (value == "id") {
-				source = `entity.id;`;
+				source = `entity.id.toString();`;
 			}
 
 			if (!source) {
