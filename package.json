@@ -1,6 +1,6 @@
 {
 	"name": "vlquery",
-	"version": "4.2.0",
+	"version": "4.2.1",
 	"description": "VLQuery ORM",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
