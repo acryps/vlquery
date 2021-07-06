@@ -38,6 +38,9 @@ export const queryFunctions = {
 	includes: new QueryFunction(1, fragment => `${fragment.call.source.toSQL()} LIKE '%' || ${fragment.call.parameters[0].toSQL()} || '%'`),
 	substringOf: new QueryFunction(1, fragment => `${fragment.call.parameters[0].toSQL()} LIKE '%' || ${fragment.call.source.toSQL()} || '%'`),
 
+	uppercase: new QueryFunction(0, fragment => `UPPER(${fragment.call.parameters[0].toSQL()})`),
+	lowercase: new QueryFunction(0, fragment => `LOWER(${fragment.call.parameters[0].toSQL()})`),
+
 	// generic
 	valueOf: new QueryFunction(0, fragment => fragment.call.source.toSQL())
 }

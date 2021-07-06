@@ -26,6 +26,14 @@ export class QueryString extends QueryType {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
 
+	uppercase(value: string | QueryString): QueryString {
+		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
+	}
+
+	lowercase(value: string | QueryString): QueryString {
+		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
+	}
+
 	substringOf(value: string | QueryString): boolean {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
