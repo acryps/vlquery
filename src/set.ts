@@ -176,7 +176,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return await this.first(item => item.id == id);
 	}
 
-	private toQuery() {
+	toQuery() {
 		return new Query(this);
 	}
 
