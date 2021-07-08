@@ -114,7 +114,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			const column = item[key];
 
 			if (key[0] == "$" && column instanceof PrimaryReference) {
-				const count = await column.count;
+				const count = await column.count();
 
 				if (count) {
 					throw new Error(`Cannot delete '${item.id}' from '${this.$$meta.tableName}'. ${count} items from '${new column.$relation().$$meta.tableName}' still reference it`);
@@ -204,8 +204,8 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return this.toQuery().includeTree(tree);
 	}
 
-	get count(): Promise<number> {
-		return this.toQuery().count;
+	count(): Promise<number> {
+		return this.toQuery().count();
 	}
 
 	orderByAscending(sorter: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy> {

@@ -4,7 +4,7 @@ You can get data from the database using the `db` variable
 <pre>
 const book = await db.book.find("&lt;uuid&gt;");
 const books = await db.book.toArray();
-const authorCount = await db.authr.count;
+const authorCount = await db.authr.count();
 </pre>
 
 ## Conditions

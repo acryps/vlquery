@@ -99,7 +99,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 		return this;
 	}
 
-	get count(): Promise<number> {
+	count(): Promise<number> {
 		this.onlyCount = true;
 
 		return this.toArrayRaw().then(raw => raw[0].count);
@@ -165,10 +165,10 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 		return `SELECT ${select} FROM ${this.set.$$meta.tableName} AS ${this.rootExtent.name} ${
 			[
 				...this.joins,
-				...this.includeClause.rootLeaf.joins
+				...this.includeClause?.rootLeaf.joins || []
 			].map(j => j.toSQL()).join("\n")
 		} ${
-			this.includeClause.toJoinSQL()
+			this.includeClause?.toJoinSQL() || ""
 		} ${
 			wheres.length ? `WHERE ${wheres.join(" AND ")}` : ""
 		} ${
