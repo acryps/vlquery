@@ -24,6 +24,7 @@ export const queryFunctions = {
 	// date operators
 	isAfter: new QueryFunction(1, (fragment, body, parameters) => `${body} > ${parameters[0].toSQL()}`),
 	isBefore: new QueryFunction(1, (fragment, body, parameters) => `${body} < ${parameters[0].toSQL()}`),
+	isToday: new QueryFunction(0, (fragment, body, parameters) => `${body} = CURRENT_DATE`),
 
 	// id array operators
 	includedIn: new QueryFunction(1, (fragment, body, parameters) => `${body} = ANY (${parameters[0].toSQL()})`),

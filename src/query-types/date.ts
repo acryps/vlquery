@@ -13,6 +13,10 @@ export class QueryDate extends QueryType {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
 
+	isToday(): boolean {
+		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
+	}
+
 	year: number;
 	month: number;
 	date: number;
