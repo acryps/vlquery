@@ -1,6 +1,6 @@
 # Query Functions
 Query functions can be used in `where`, `first`, `orderByAscending`, `orderByDescending`.
-[Read, filter and order data](read-filter-order.md)
+[How to read, filter and order data](read-filter-order.md)
 
 If you are missing a function, please open an issue!
 
