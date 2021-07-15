@@ -27,7 +27,7 @@ await authorsFirstBookFrom2001.update();
 ## Documentation
 [Getting started](doc/getting-started.md)<br>
 [Database structure](doc/database-structure.md)<br>
-[Getting and filtering data](doc/getting-and-filtering-data.md)<br>
+[Reading, filtering and ordering data](doc/read-filter-order.md)<br>
 [Altering data](doc/altering-data.md)<br>
 [Adding audits](doc/audit.md)<br>
 [Performance and include](doc/performance-and-include.md)

@@ -22,12 +22,40 @@ const alicesBook = await db.book.first(book => book.author.firstname == "Alice")
 const book = await db.book.single(book => book.title == "A Book");
 </pre>
 
+Columns can be filtered with functions ([Full function list](functions.md))
+<pre>
+// case insensitive title matching
+await db.book.where(book => book.title<b>.lowercase()</b> == "test").toArray();
+
+// searching for books by title (case insensitive)
+await db.book.where(book => book.title<b>.lowercase().startsWith("tes")</b>).toArray();
+
+// searching for autobios by searching for books with the authors name in their title
+await db.book.where(book => book.title<b>.uppercase().includes(book.author.firstname.uppercase())</b>).toArray();
+</pre>
+
 ## Putting everyting into order
-postgres can be very funny when it comes to the order of records in a table, so to make sure everyting is ordered properly, use the order by methods.
+postgres can be very funny when it comes to the order of records in a table, so to make sure everyting is ordered properly, use the `orderBy` methods.
 <pre>
 const books = await db.book
 	.orderByAscending(book => book.author.lastname)
 	.orderByAscending(book => book.title)
+	.toArray();
+</pre>
+
+If your ordering column contains NULLs and you want a fallback sorting column, use `||`
+<pre>
+// some books do not have a release date yet, so we'll use the planned date instead!
+const books = await db.book
+	.orderByDescending(book => book.releaseDate<b> || book.plannedReleaseDate</b>)
+	.toArray();
+</pre>
+
+You can use the afformentioned query functions for sorting! ([Full function list](functions.md))
+<pre>
+// case insensitive title sorting
+const books = await db.book
+	.orderByDescending(book => book.title<b>.lowercase()</b>)
 	.toArray();
 </pre>
 
