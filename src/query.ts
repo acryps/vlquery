@@ -106,13 +106,23 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	}
 
 	orderByAscending(sorter: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
-		this.orders.push(new QueryOrder(this, sorter, "asc"));
+		// ensure compiled query
+		if (typeof sorter == "function") {
+			throw new Error("Uncompiled query cannot be used in runtime");
+		}
+
+		this.orders.push(new QueryOrder(this, sorter as CompiledQuery, "asc"));
 
 		return this;
 	}
 
 	orderByDescending(sorter: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
-		this.orders.push(new QueryOrder(this, sorter, "desc"));
+		// ensure compiled query
+		if (typeof sorter == "function") {
+			throw new Error("Uncompiled query cannot be used in runtime");
+		}
+
+		this.orders.push(new QueryOrder(this, sorter as CompiledQuery, "desc"));
 
 		return this;
 	}
