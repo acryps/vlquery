@@ -1,15 +1,15 @@
 [![npm version](http://badge.acryps.com/npm/vlquery)](http://badge.acryps.com/go/npm/vlquery)
 
-<img src="doc/assets/logo.svg" height="100">
+<img src="doc/assets/logo.svg" height="50">
 
 # vlquery TypeScript ORM
 Simple to use TypeScript based database first ORM for postgres.
 
-Here is a little example:
+Example usage:
 <pre>
 const books = await db.book
 	.where(book => book.author.firstname == "Jan")
-	.orderByAscending(book => book.title)
+	.orderByAscending(book => book.title.lowercase())
 	.toArray();
 
 const author = await db.person.find("&lt;a very long uuid&gt;");
