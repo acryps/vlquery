@@ -31,3 +31,6 @@ await authorsFirstBookFrom2001.update();
 [Altering data](doc/altering-data.md)<br>
 [Adding audits](doc/audit.md)<br>
 [Performance and include](doc/performance-and-include.md)
+
+## Sponsoring and support
+This project is sponsored and supported by [inter allied crypsis / ACRYPS](https://acryps.com) and [VLVT.IN GmbH](https://vlvt.in).
