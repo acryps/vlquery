@@ -63,7 +63,7 @@ export class QueryOrder<TModel extends Entity<TQueryModel>, TQueryModel extends 
 				set = new reference.$relation().$$meta.set;
 			}
 
-			this.column = set.$$meta.columns[path[path.length - 1]];
+			this.column = set.$$meta.columns[path[path.length - 1]].name;
 		}
 	}
 
@@ -87,14 +87,5 @@ export class QueryOrder<TModel extends Entity<TQueryModel>, TQueryModel extends 
 
 	toSQL() {
 		return `${this.toSQLFragment()} ${this.direction}`
-	}
-}
-
-export class QueryOrderProperty<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
-	extent: QueryExtent<TModel, TQueryModel>;
-	column: { name: string; type: string; };
-
-	toSQL() {
-		return `${this.extent.name}.${this.column.name}`;
 	}
 }
