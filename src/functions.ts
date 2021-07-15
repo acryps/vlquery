@@ -4,10 +4,10 @@ import { QueryFragment } from "./query-operators/fragment";
 export class QueryFunction {
 	constructor(
 		public argCount: number | [number, number],
-		public converter: (fragment: QueryFragment<Entity<QueryProxy>, QueryProxy>, body: string, parameters: QueryFragment<Entity<QueryProxy>, QueryProxy>[]) => string,
+		public converter: (body: string, parameters: QueryFragment<Entity<QueryProxy>, QueryProxy>[]) => string,
 	) {}
 
-	toSQL(fragment: QueryFragment<Entity<QueryProxy>, QueryProxy>, body, parameters) {
+	toSQL(body, parameters) {
 		if (typeof this.argCount == "number" && parameters.length != this.argCount) {
 			throw new Error(`Invalid parameter count for query function`);
 		}
@@ -16,33 +16,33 @@ export class QueryFunction {
 			throw new Error(`Invalid parameter count for query function`);
 		}
 
-		return this.converter(fragment, body, parameters);
+		return this.converter(body, parameters);
 	}
 }
 
 export const queryFunctions = {
 	// date operators
-	isAfter: new QueryFunction(1, (fragment, body, parameters) => `${body} > ${parameters[0].toSQL()}`),
-	isBefore: new QueryFunction(1, (fragment, body, parameters) => `${body} < ${parameters[0].toSQL()}`),
-	isToday: new QueryFunction(0, (fragment, body, parameters) => `${body} = CURRENT_DATE`),
+	isAfter: new QueryFunction(1, (body, parameters) => `${body} > ${parameters[0].toSQL()}`),
+	isBefore: new QueryFunction(1, (body, parameters) => `${body} < ${parameters[0].toSQL()}`),
+	isToday: new QueryFunction(0, (body, parameters) => `${body} = CURRENT_DATE`),
 
 	// id array operators
-	includedIn: new QueryFunction(1, (fragment, body, parameters) => `${body} = ANY (${parameters[0].toSQL()})`),
+	includedIn: new QueryFunction(1, (body, parameters) => `${body} = ANY (${parameters[0].toSQL()})`),
 
 	// string search operators
-	startsWith: new QueryFunction(1, (fragment, body, parameters) => `${body} LIKE ${parameters[0].toSQL()} || '%'`),
-	startOf: new QueryFunction(1, (fragment, body, parameters) => `${parameters[0].toSQL()} LIKE ${body} || '%'`),
+	startsWith: new QueryFunction(1, (body, parameters) => `${body} LIKE ${parameters[0].toSQL()} || '%'`),
+	startOf: new QueryFunction(1, (body, parameters) => `${parameters[0].toSQL()} LIKE ${body} || '%'`),
 
-	endsWith: new QueryFunction(1, (fragment, body, parameters) => `${body} LIKE '%' || ${parameters[0].toSQL()}`),
-	endOf: new QueryFunction(1, (fragment, body, parameters) => `${parameters[0].toSQL()} LIKE '%' || ${body}`),
+	endsWith: new QueryFunction(1, (body, parameters) => `${body} LIKE '%' || ${parameters[0].toSQL()}`),
+	endOf: new QueryFunction(1, (body, parameters) => `${parameters[0].toSQL()} LIKE '%' || ${body}`),
 
-	includes: new QueryFunction(1, (fragment, body, parameters) => `${body} LIKE '%' || ${parameters[0].toSQL()} || '%'`),
-	substringOf: new QueryFunction(1, (fragment, body, parameters) => `${parameters[0].toSQL()} LIKE '%' || ${body} || '%'`),
+	includes: new QueryFunction(1, (body, parameters) => `${body} LIKE '%' || ${parameters[0].toSQL()} || '%'`),
+	substringOf: new QueryFunction(1, (body, parameters) => `${parameters[0].toSQL()} LIKE '%' || ${body} || '%'`),
 
 	// string case operators
-	uppercase: new QueryFunction(0, (fragment, body, parameters) => `UPPER(${body})`),
-	lowercase: new QueryFunction(0, (fragment, body, parameters) => `LOWER(${body})`),
+	uppercase: new QueryFunction(0, (body, parameters) => `UPPER(${body})`),
+	lowercase: new QueryFunction(0, (body, parameters) => `LOWER(${body})`),
 
 	// generic
-	valueOf: new QueryFunction(0, (fragment, body, parameters) =>body)
+	valueOf: new QueryFunction(0, (body, parameters) =>body)
 }

@@ -5,53 +5,88 @@ import { ForeignReference } from "../reference";
 import { QueryJoin } from "./join";
 import { QueryExtent } from "./extent";
 import { Query } from "../query";
+import { CompiledQuery, CompiledQueryCall } from "../compiled-query";
+import { QueryFunction, queryFunctions } from "../functions";
 
 export class QueryOrder<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
-	properties: QueryOrderProperty<TModel, TQueryModel>[];
+	children: QueryOrder<TModel, TQueryModel>[];
+
+	extent: QueryExtent<TModel, TQueryModel>;
+	column: string;
+	calls: CompiledQueryCall[];
 
 	constructor(
 		public query: Query<TModel, TQueryModel>,
-		sorter: (item: TQueryModel) => any,
+		sorterTree: CompiledQuery,
 		public direction: "asc" | "desc"
 	) {
-		const body = sorter.toString().split("=>")[1];
-		this.properties = [];
+		if (sorterTree.logical) {
+			this.children = [
+				new QueryOrder(query, sorterTree.logical.left, direction),
+				new QueryOrder(query, sorterTree.logical.right, direction)
+			];
+		} else {
+			let path: string[] = [];
 
-		for (let property of body.split("||")) {
-			const prop = new QueryOrderProperty();
-			const properties = property.trim().split(".").map(v => v.trim()).slice(1);
+			if (sorterTree.call) {
+				this.calls = [];
 
-			prop.extent = query.rootExtent;
+				for (let item of sorterTree.call.stack) {
+					if (typeof item == "string") {
+						path.push(item);
+					} else {
+						this.calls.push(item);
+					}
+				}
+			} else {
+				path = sorterTree.path;
+			}
+
+			this.extent = query.rootExtent;
+
 			let set = query.set as DbSet<Entity<QueryProxy>, QueryProxy>;
-	
-			for (let i = 0; i < properties.length - 1; i++) {
-				const name = properties[i];
+
+			for (let i = 0; i < path.length - 1; i++) {
+				const name = path[i];
+
 				const proxy = new set.modelConstructor();
 				const reference = proxy[name] as ForeignReference<Entity<QueryProxy>>;
-	
+
 				const join = new QueryJoin(
 					query,
-					prop.extent,
+					this.extent,
 					(new reference.$relation()).$$meta.tableName,
 					reference.$$item.$$meta.columns[reference.$column].name
 				);
-	
-				prop.extent = join.extent;
+
+				this.extent = join.extent;
 				set = new reference.$relation().$$meta.set;
 			}
-	
-			prop.column = set.$$meta.columns[properties[properties.length - 1]];
 
-			this.properties.push(prop);
+			this.column = set.$$meta.columns[path[path.length - 1]];
+		}
+	}
+
+	private toSQLFragment() {
+		if (this.children) {
+			return `COALESCE(${this.children.map(child => child.toSQLFragment()).join(", ")})`;
+		} else if (this.calls) {
+			let body = `(${this.extent.name}.${this.column})`;
+
+			for (let call of this.calls) {
+				const fx = queryFunctions[call.name] as QueryFunction;
+
+				body = fx.toSQL(body, call.parameters);
+			}
+
+			return body;
+		} else {
+			return `${this.extent.name}.${this.column}`;
 		}
 	}
 
 	toSQL() {
-		if (this.properties.length == 1) {
-			return `${this.properties[0].toSQL()} ${this.direction}`;
-		}
-
-		return `COALESCE(${this.properties.map(p => p.toSQL()).join(", ")}) ${this.direction}`
+		return `${this.toSQLFragment()} ${this.direction}`
 	}
 }
 

@@ -176,7 +176,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 			let body = this.call.source.toSQL();
 
             for (let call of this.call.calls) {
-                body = call.to.toSQL(this, body, call.parameters);
+                body = call.to.toSQL(body, call.parameters);
             }
 
             return `(${body})`;

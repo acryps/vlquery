@@ -33,7 +33,9 @@ export const config = {
 		methods: (userConfig.compile && userConfig.compile.methods) || [
 			"where",
 			"first",
-			"count"
+			"count",
+			"orderByAscending",
+			"orderByDescending"
 		],
 		verbose: userConfig.compile ? ("verbose" in userConfig.compile ? userConfig.compile.verbose : false) : false
 	}

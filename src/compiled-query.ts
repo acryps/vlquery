@@ -15,11 +15,13 @@ export interface CompiledQuery {
 	path?: string[];
 
 	call?: {
-		stack: (string | {
-			name: string,
-			parameters: CompiledQuery[];
-		})[];
+		stack: (string | CompiledQueryCall)[];
 	};
 
 	value?: any;
+}
+
+export interface CompiledQueryCall {
+	name: string;
+	parameters: CompiledQuery[];
 }
