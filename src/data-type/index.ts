@@ -1,5 +1,6 @@
 import { BaseDataType } from "./base";
 import { ByteArray } from "./byte-array";
+import { DateType } from "./date";
 
 export * from "./byte-array";
 
