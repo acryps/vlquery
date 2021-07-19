@@ -18,7 +18,7 @@ export const dataTypes: { [name: string]: typeof BaseDataType } = {
 	timestamp: BaseDataType,
 	timestamptz: BaseDataType,
 	time: BaseDataType,
-    date: BaseDataType,
+    date: DateType,
     json: BaseDataType,
     jsonb: BaseDataType
 };
