@@ -115,7 +115,7 @@ export class DbClient {
 
 			console.log(`executing on ${this.clientIndex}`);
 
-			return (await this.clients[this.clientIndex].query(query, params)).rows;
+			return (await this.clients[this.clientIndex].client.query(query, params)).rows;
 		} catch (error) {
 			console.warn("query failed", error);
 
