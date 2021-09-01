@@ -20,7 +20,7 @@ export class DbClient {
 
 		// reset open connections
 		for (let client of this.clients) {
-			await client.end();
+			client.release();
 		}
 
 		this.clients = [];
@@ -36,8 +36,8 @@ export class DbClient {
 
 			connection.client = await this.connection.connect();
 			
-			connection.client.on("error", () => this.reconnect(connection.client));
-			connection.client.on("end", () => this.reconnect(connection.client));
+			connection.client.on("error", () => this.reconnect(connection));
+			connection.client.on("end", () => this.reconnect(connection));
 
 			this.clients.push(connection);
 		}
