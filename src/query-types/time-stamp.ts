@@ -1,7 +1,12 @@
+import { QueryDate } from ".";
 import { QueryType } from "../query-proxy";
 
 export class QueryTimeStamp extends QueryType {
 	valueOf(): Date {
+		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
+	}
+
+	toDate(): QueryDate {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
 

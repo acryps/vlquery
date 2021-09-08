@@ -10,6 +10,8 @@ column.isAfter(date) // checks if the column is after the date parameter
 column.isBefore(date) // checks if the column is before the date parameter
 
 column.isToday() // checks if the column is today (current date). this uses the postgres servers time (might diverge form your node processes time/timezone)
+
+column.toDate() // only TIMESTAMP: converts to date (sets time to 00:00:00)
 ```
 
 ## String Operators

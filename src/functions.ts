@@ -24,7 +24,8 @@ export const queryFunctions = {
 	// date operators
 	isAfter: new QueryFunction(1, (body, parameters) => `${body} > ${parameters[0].toSQL()}`),
 	isBefore: new QueryFunction(1, (body, parameters) => `${body} < ${parameters[0].toSQL()}`),
-	isToday: new QueryFunction(0, (body, parameters) => `${body} = CURRENT_DATE`),
+	isToday: new QueryFunction(0, body => `${body} = CURRENT_DATE`),
+	toDate: new QueryFunction(0, body => `${body}::DATE`),
 
 	// id array operators
 	includedIn: new QueryFunction(1, (body, parameters) => `${body} = ANY (${parameters[0].toSQL()})`),
@@ -40,8 +41,8 @@ export const queryFunctions = {
 	substringOf: new QueryFunction(1, (body, parameters) => `${parameters[0].toSQL()} LIKE '%' || ${body} || '%'`),
 
 	// string case operators
-	uppercase: new QueryFunction(0, (body, parameters) => `UPPER(${body})`),
-	lowercase: new QueryFunction(0, (body, parameters) => `LOWER(${body})`),
+	uppercase: new QueryFunction(0, body => `UPPER(${body})`),
+	lowercase: new QueryFunction(0, body => `LOWER(${body})`),
 
 	// generic
 	valueOf: new QueryFunction(0, (body, parameters) =>body)
