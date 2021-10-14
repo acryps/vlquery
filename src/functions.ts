@@ -40,6 +40,8 @@ export const queryFunctions = {
 	includes: new QueryFunction(1, (body, parameters) => `${body} LIKE '%' || ${parameters[0].toSQL()} || '%'`),
 	substringOf: new QueryFunction(1, (body, parameters) => `${parameters[0].toSQL()} LIKE '%' || ${body} || '%'`),
 
+	length: new QueryFunction(0, body => `LENGTH(${body})`),
+
 	// string case operators
 	uppercase: new QueryFunction(0, body => `UPPER(${body})`),
 	lowercase: new QueryFunction(0, body => `LOWER(${body})`),

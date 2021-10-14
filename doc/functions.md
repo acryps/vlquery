@@ -27,6 +27,8 @@ column.substringOf(string) // checks if the string parameter includes the column
 
 column.uppercase(): QueryString // converts the string to upper case (ABC)
 column.lowercase(): QueryString // converts the string to lower case (abc)
+
+column.length(): QueryNumber // get the strings length (ABC = 3)
 ```
 
 ## Chaining
