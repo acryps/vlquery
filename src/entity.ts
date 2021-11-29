@@ -42,7 +42,7 @@ export class Entity<TQueryProxy extends QueryProxy> {
 			copy[key] = this[key];
 		}
 
-		copy.id = null;
+		delete copy.id;
 
 		return copy as this;
 	}
