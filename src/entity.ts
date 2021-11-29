@@ -44,6 +44,6 @@ export class Entity<TQueryProxy extends QueryProxy> {
 
 		copy.id = null;
 
-		return copy;
+		return copy as this;
 	}
 }
