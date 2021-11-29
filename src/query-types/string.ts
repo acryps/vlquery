@@ -1,4 +1,4 @@
-import { strict } from "assert";
+import { QueryNumber } from ".";
 import { QueryType } from "../query-proxy";
 
 export class QueryString extends QueryType {
@@ -35,6 +35,10 @@ export class QueryString extends QueryType {
 	}
 
 	substringOf(value: string | QueryString): boolean {
+		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
+	}
+
+	length(): QueryNumber {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
 }

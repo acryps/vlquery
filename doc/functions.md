@@ -10,6 +10,8 @@ column.isAfter(date) // checks if the column is after the date parameter
 column.isBefore(date) // checks if the column is before the date parameter
 
 column.isToday() // checks if the column is today (current date). this uses the postgres servers time (might diverge form your node processes time/timezone)
+
+column.toDate() // only TIMESTAMP: converts to date (sets time to 00:00:00)
 ```
 
 ## String Operators
@@ -25,6 +27,8 @@ column.substringOf(string) // checks if the string parameter includes the column
 
 column.uppercase(): QueryString // converts the string to upper case (ABC)
 column.lowercase(): QueryString // converts the string to lower case (abc)
+
+column.length(): QueryNumber // get the strings length (ABC = 3)
 ```
 
 ## Chaining
