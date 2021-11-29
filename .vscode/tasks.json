@@ -4,13 +4,6 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Publish @pooling to npm",
-			"detail": "Publish vlquery@pooling to npm",
-			"type": "shell",
-			"command": "npm version ${input:version-type} && npm publish --tag pooling",
-			"problemMatcher": []
-		},
-		{
 			"label": "Publish @dev to npm",
 			"detail": "Publish vlquery@dev to npm",
 			"type": "shell",
