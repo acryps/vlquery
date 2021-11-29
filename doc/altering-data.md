@@ -39,3 +39,16 @@ await book.delete();
 </pre>
 
 If you are using an active column, this will only deactivate the row!
+
+## Duplicating a record
+Records can be duplicated by using the `createDuplicate` method on an entity
+<pre>
+const book = await db.book.find("&lt;uuid&gt;");
+
+const copy = book.createDuplicate();
+copy.title += " (Copy)";
+await copy.create();
+
+console.log(book.title); // "My first book"
+console.log(copy.title) // "My first book (Copy)"
+</pre>

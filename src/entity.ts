@@ -33,4 +33,17 @@ export class Entity<TQueryProxy extends QueryProxy> {
 	async delete(comment?: string): Promise<void> {
 		await this.$$meta.set.delete(this, comment);
 	}
+
+	createDuplicate() {
+		const copy = new this.$$meta.set.modelConstructor();
+		copy.$$meta = this.$$meta;
+
+		for (let key in this.$$meta.columns) {
+			copy[key] = this[key];
+		}
+
+		copy.id = null;
+
+		return copy;
+	}
 }
