@@ -1,38 +1,60 @@
-import { Client } from "pg";
+import { Client, Pool } from "pg";
 
 export class DbClient {
 	static connectedClient: DbClient;
 	static reconnectInterval = 2000;
 	static reconnecting = false;
 	
-	connection: Client;
+	connection: Pool;
 	connected: boolean;
 
 	stalledRequests: StalledDbRequest[] = [];
 
+	clients: Client[] = [];
+	clientIndex: number = 0;
+
 	constructor(private configuration?) {}
 
 	async connect() {
-		this.connection = new Client(this.configuration);
+		this.connection = new Pool(this.configuration);
 
-		this.connection.on("error", () => this.reconnect());
-		this.connection.on("end", () => this.reconnect());
+		// reset open connections
+		for (let client of this.clients) {
+			client.release();
+		}
 
-		await this.connection.connect();
+		this.clients = [];
+		this.clientIndex = 0;
+
+		const count = this.configuration.max || 8;
+
+		for (let index = 0; index < count; index++) {
+			console.log(`connecting ${index + 1} / ${count}`);
+
+			const connection = new DbClientConnection();
+			connection.index = index;
+
+			connection.client = await this.connection.connect();
+			
+			connection.client.on("error", () => this.reconnect(connection));
+			connection.client.on("end", () => this.reconnect(connection));
+
+			this.clients.push(connection);
+		}
 
 		this.connected = true;
 	}
 
-	reconnect() {
+	reconnect(client: DbClientConnection) {
 		this.connected = false;
 
 		if (DbClient.reconnecting) {
-			return
+			return;
 		}
 
 		DbClient.reconnecting = true;
 
-		console.log("reconnecting...");
+		console.log(`reconnecting (#${client.index + 1})...`);
 
 		this.connect().then(() => {
 			DbClient.reconnecting = false;
@@ -52,7 +74,7 @@ export class DbClient {
 			setTimeout(() => {
 				DbClient.reconnecting = false;
 
-				this.reconnect();
+				this.reconnect(client);
 			}, DbClient.reconnectInterval);
 		});
 	}
@@ -85,7 +107,13 @@ export class DbClient {
 		}
 
 		try {
-			return (await this.connection.query(query, params)).rows;
+			this.clientIndex++;
+
+			if (this.clientIndex >= this.clients.length) {
+				this.clientIndex = 0;
+			}
+
+			return (await this.clients[this.clientIndex].client.query(query, params)).rows;
 		} catch (error) {
 			console.warn("query failed", error);
 
@@ -115,4 +143,10 @@ export class StalledDbRequest {
 	data: any[];
 
 	oncomplete(res) {}
+}
+
+export class DbClientConnection {
+	client: Client;
+
+	index = 0;
 }
