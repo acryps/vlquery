@@ -1,4 +1,4 @@
-import { QueryDate } from ".";
+import { QueryDate, QueryString } from ".";
 import { QueryType } from "../query-proxy";
 
 export class QueryTimeStamp extends QueryType {
@@ -15,6 +15,10 @@ export class QueryTimeStamp extends QueryType {
 	}
 
 	isAfter(date: Date): boolean {
+		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
+	}
+
+	toISODate(): QueryString {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
 
