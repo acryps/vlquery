@@ -8,6 +8,7 @@ If you are missing a function, please open an issue!
 ```
 column.isAfter(date) // checks if the column is after the date parameter
 column.isBefore(date) // checks if the column is before the date parameter
+column.toISODate(): QueryString // converts to an iso string
 
 column.isToday() // checks if the column is today (current date). this uses the postgres servers time (might diverge form your node processes time/timezone)
 
@@ -29,6 +30,8 @@ column.uppercase(): QueryString // converts the string to upper case (ABC)
 column.lowercase(): QueryString // converts the string to lower case (abc)
 
 column.length(): QueryNumber // get the strings length (ABC = 3)
+
+column.hash(algo): QueryString // hashes the string (requires pgcrypto, algo can be md5, sha1, sha224, sha256, sha384 or sha512 by default)
 ```
 
 ## Chaining

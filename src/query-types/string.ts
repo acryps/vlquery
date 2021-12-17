@@ -41,4 +41,8 @@ export class QueryString extends QueryType {
 	length(): QueryNumber {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
+
+	hash(algo: "md5" | "sha1" | "sha224" | "sha256" | "sha384" | "sha512" | string): QueryString {
+		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
+	}
 }

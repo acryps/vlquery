@@ -1,3 +1,4 @@
+import { QueryString } from ".";
 import { QueryType } from "../query-proxy";
 
 export class QueryDate extends QueryType {
@@ -14,6 +15,10 @@ export class QueryDate extends QueryType {
 	}
 
 	isToday(): boolean {
+		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
+	}
+
+	toISODate(): QueryString {
 		throw "Invalid use of QueryTypes. QueryTypes cannot be used during runtime";
 	}
 

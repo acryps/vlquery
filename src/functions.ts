@@ -26,6 +26,7 @@ export const queryFunctions = {
 	isBefore: new QueryFunction(1, (body, parameters) => `${body} < ${parameters[0].toSQL()}`),
 	isToday: new QueryFunction(0, body => `${body} = CURRENT_DATE`),
 	toDate: new QueryFunction(0, body => `${body}::DATE`),
+	toISODate: new QueryFunction(0, body => `to_json(${body})#>>'{}'`),
 
 	// id array operators
 	includedIn: new QueryFunction(1, (body, parameters) => `${body} = ANY (${parameters[0].toSQL()})`),
@@ -45,6 +46,7 @@ export const queryFunctions = {
 	// string case operators
 	uppercase: new QueryFunction(0, body => `UPPER(${body})`),
 	lowercase: new QueryFunction(0, body => `LOWER(${body})`),
+	hash: new QueryFunction(1, (body, parameters) => `encode(digest(${body}, ${parameters[0]}), 'hex')`),
 
 	// generic
 	valueOf: new QueryFunction(0, (body, parameters) =>body)
