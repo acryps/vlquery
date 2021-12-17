@@ -46,7 +46,7 @@ export const queryFunctions = {
 	// string case operators
 	uppercase: new QueryFunction(0, body => `UPPER(${body})`),
 	lowercase: new QueryFunction(0, body => `LOWER(${body})`),
-	hash: new QueryFunction(1, (body, parameters) => `encode(digest(${body}, ${parameters[0]}), 'hex')`),
+	hash: new QueryFunction(1, (body, parameters) => `encode(digest(${body}, ${parameters[0].toSQL()}), 'hex')`),
 
 	// generic
 	valueOf: new QueryFunction(0, (body, parameters) =>body)
