@@ -82,6 +82,8 @@ export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel exten
 		}
 
 		if (tree.call) {
+
+			
 			this.call = {
                 calls: (tree.call.stack.filter(e => typeof e != "string") as any).map(item => ({
                     to: queryFunctions[item.name],
