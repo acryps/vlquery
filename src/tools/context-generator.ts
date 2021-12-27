@@ -88,24 +88,7 @@ export function createContext() {
 		`)).rows;
 
 		let context = `
-import { 
-	Entity,
-	DbSet,
-	RunContext,
-	QueryUUID,
-	QueryProxy,
-	QueryString,
-	QueryJSON,
-	QueryTimeStamp,
-	QueryNumber,
-	QueryTime,
-	QueryDate,
-	QueryBoolean,
-	QueryBuffer,
-	QueryEnum,
-	ForeignReference,
-	PrimaryReference
-} from "vlquery";
+import { Entity, DbSet, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSON, QueryTimeStamp, QueryNumber, QueryTime, QueryDate, QueryBoolean, QueryBuffer, QueryEnum, ForeignReference, PrimaryReference } from "vlquery";
 		`.trim() + "\n";
 		let sets = [];
 
@@ -165,6 +148,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 
 			let constr = ``;
 			let body = ``;
+			let shadowBody = ``;
 			let proxyBody = ``;
 
 			config.compile.verbose && console.group("constraints");
@@ -179,26 +163,26 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 				} 
 
 				if (constraint.table_name == table && parts[0]) {
-					constr += `
-		this.$${convertToModelName(parts[0])} = new ForeignReference<${convertToClassName(constraint.foreign_table_name)}>(
-			this,
-			${JSON.stringify(convertToModelName(constraint.column_name))},
-			${convertToClassName(constraint.foreign_table_name)}
-		);
-					`;
+					constr += `this.$${convertToModelName(parts[0])} = new ForeignReference<${
+						convertToClassName(constraint.foreign_table_name)
+					}>(this, ${
+						JSON.stringify(convertToModelName(constraint.column_name))
+					}, ${
+						convertToClassName(constraint.foreign_table_name)
+					});\n`;
 
-					body += `
+					body += `get ${convertToModelName(parts[0])}(): Partial<ForeignReference<${
+						convertToClassName(constraint.foreign_table_name)
+					}>> { return this.$${
+						convertToModelName(parts[0])
+					}; }\n`
+
+					shadowBody += `
 	private $${convertToModelName(parts[0])}: ForeignReference<${convertToClassName(constraint.foreign_table_name)}>;
-
-	get ${convertToModelName(parts[0])}(): Partial<ForeignReference<${convertToClassName(constraint.foreign_table_name)}>> {
-		return this.$${convertToModelName(parts[0])};
-	}
 
 	set ${convertToModelName(parts[0])}(value: Partial<ForeignReference<${convertToClassName(constraint.foreign_table_name)}>>) {
 		if (value) {
-			if (!value.id) {
-				throw new Error("Invalid null id. Save the referenced model prior to creating a reference to it.");
-			}
+			if (!value.id) { throw new Error("Invalid null id. Save the referenced model prior to creating a reference to it."); }
 
 			this.${convertToModelName(constraint.column_name)} = ${columns.find(c => c.column_name == "id").data_type == "uuid" ? "value.id as string" : "+value.id"};
 		} else {
@@ -207,21 +191,21 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 	}
 					`;
 
-					proxyBody += `
-	get ${convertToModelName(parts[0])}(): Partial<${convertToQueryProxyName(constraint.foreign_table_name)}> {
-		throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
-	}
-					`;
+					proxyBody += `get ${
+						convertToModelName(parts[0])
+					}(): Partial<${
+						convertToQueryProxyName(constraint.foreign_table_name)
+					}> { throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime"); }\n`;
 				}
 				
 				if (constraint.foreign_table_name == table && parts[1]) {
-					constr += `
-		this.${convertToModelName(parts[1])} = new PrimaryReference<${convertToClassName(constraint.table_name)}, ${convertToQueryProxyName(constraint.table_name)}>(
-			this,
-			${JSON.stringify(convertToModelName(constraint.column_name))},
-			${convertToClassName(constraint.table_name)}
-		);
-					`;
+					constr += `this.${convertToModelName(parts[1])} = new PrimaryReference<${
+						convertToClassName(constraint.table_name)
+					}, ${
+						convertToQueryProxyName(constraint.table_name)
+					}>(this, ${
+						JSON.stringify(convertToModelName(constraint.column_name))
+					}, ${convertToClassName(constraint.table_name)});\n`;
 
 					body += `
 	${convertToModelName(parts[1])}: PrimaryReference<${convertToClassName(constraint.table_name)}, ${convertToQueryProxyName(constraint.table_name)}>;
@@ -230,9 +214,6 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 			}
 
 			config.compile.verbose && console.groupEnd();
-
-			body += "\n\t";
-
 			config.compile.verbose && console.group("columns");
 
 			const columnMappings = {};
@@ -275,14 +256,21 @@ export class ${convertToQueryProxyName(table)} extends QueryProxy {
 }
 
 export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyName(table)}> {
+	${body.trim()}
+
 	$$meta = {
 		tableName: ${JSON.stringify(table)},
-		columns: ${JSON.stringify(columnMappings)},
+
+		columns: {
+			${Object.keys(columnMappings).map(key => `${key}: { type: ${JSON.stringify(columnMappings[key].type)}, name: ${JSON.stringify(columnMappings[key].name)} }`).join("\n\t\t\t")}
+		},
+
 		get set(): DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> {
 			// returns unbound dbset
 			return new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}, null)
-		},
-		${config.context.active ? `active: ${JSON.stringify(config.context.active)}` : ""}
+		}${config.context.active ? `,
+		
+		active: ${JSON.stringify(config.context.active)}` : ""}
 	};
 		
 	constructor() {
@@ -291,7 +279,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 		${constr.trim()}
 	}
 
-	${body.trim()}
+	${shadowBody}
 }
 			`;
 
