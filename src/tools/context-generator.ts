@@ -169,7 +169,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 						JSON.stringify(convertToModelName(constraint.column_name))
 					}, ${
 						convertToClassName(constraint.foreign_table_name)
-					});\n`;
+					});\n\t\t`;
 
 					body += `get ${convertToModelName(parts[0])}(): Partial<ForeignReference<${
 						convertToClassName(constraint.foreign_table_name)
@@ -255,6 +255,7 @@ export class ${convertToQueryProxyName(table)} extends QueryProxy {
 
 export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyName(table)}> {
 	${body.trim()}
+	
 
 	$$meta = {
 		tableName: ${JSON.stringify(table)},
