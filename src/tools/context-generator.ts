@@ -175,7 +175,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 						convertToClassName(constraint.foreign_table_name)
 					}>> { return this.$${
 						convertToModelName(parts[0])
-					}; }\n`
+					}; }\n\t`
 
 					shadowBody += `
 	private $${convertToModelName(parts[0])}: ForeignReference<${convertToClassName(constraint.foreign_table_name)}>;
@@ -195,7 +195,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 						convertToModelName(parts[0])
 					}(): Partial<${
 						convertToQueryProxyName(constraint.foreign_table_name)
-					}> { throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime"); }\n`;
+					}> { throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime"); }\n\t`;
 				}
 				
 				if (constraint.foreign_table_name == table && parts[1]) {
@@ -205,11 +205,9 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 						convertToQueryProxyName(constraint.table_name)
 					}>(this, ${
 						JSON.stringify(convertToModelName(constraint.column_name))
-					}, ${convertToClassName(constraint.table_name)});\n`;
+					}, ${convertToClassName(constraint.table_name)});\n\t\t`;
 
-					body += `
-	${convertToModelName(parts[1])}: PrimaryReference<${convertToClassName(constraint.table_name)}, ${convertToQueryProxyName(constraint.table_name)}>;
-					`;
+					body += `${convertToModelName(parts[1])}: PrimaryReference<${convertToClassName(constraint.table_name)}, ${convertToQueryProxyName(constraint.table_name)}>;\n\t\t`;
 				}
 			}
 
@@ -240,11 +238,11 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 				body += `${convertToModelName(column.column_name)}: ${type};\n\t`;
 					
 				if (column.column_name != "id") {
-					proxyBody += `
-	get ${convertToModelName(column.column_name)}(): ${column.data_type in enums ? enums[column.data_type].map(e => JSON.stringify(e)).join(" | ") : `Partial<${proxyType}>`} {
-		throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime");
-	}
-					`;
+					proxyBody += `get ${
+						convertToModelName(column.column_name)
+					}(): ${
+						column.data_type in enums ? enums[column.data_type].map(e => JSON.stringify(e)).join(" | ") : `Partial<${proxyType}>`
+					} { throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime"); }\n\t`;
 				}
 			}
 
@@ -262,24 +260,31 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 		tableName: ${JSON.stringify(table)},
 
 		columns: {
-			${Object.keys(columnMappings).map(key => `${key}: { type: ${JSON.stringify(columnMappings[key].type)}, name: ${JSON.stringify(columnMappings[key].name)} }`).join("\n\t\t\t")}
+			${Object.keys(columnMappings).map(key => `${key}: { type: ${JSON.stringify(columnMappings[key].type)}, name: ${JSON.stringify(columnMappings[key].name)} }`).join(",\n\t\t\t")}
 		},
 
-		get set(): DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> {
-			// returns unbound dbset
-			return new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}, null)
-		}${config.context.active ? `,
+		get set(): DbSet<${
+			convertToClassName(table)
+		}, ${
+			convertToQueryProxyName(table)
+		}> { return new DbSet<${
+			convertToClassName(table)
+		}, ${
+			convertToQueryProxyName(table)
+		}>(${
+			convertToClassName(table)
+		}, null) }${config.context.active ? `,
 		
 		active: ${JSON.stringify(config.context.active)}` : ""}
-	};
-		
+	};${constr.trim() ? `
+	
 	constructor() {
 		super();
-
+		
 		${constr.trim()}
-	}
-
-	${shadowBody}
+	}` : ""}${shadowBody ? `
+	
+	${shadowBody}` : ""}
 }
 			`;
 
