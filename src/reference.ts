@@ -5,6 +5,7 @@ import { Query } from ".";
 
 export class ForeignReference<T extends Entity<QueryProxy>> {
 	private $stored;
+	private $fetched = false;
 	
 	constructor(
 		public $$item: Entity<QueryProxy>,
@@ -25,7 +26,7 @@ export class ForeignReference<T extends Entity<QueryProxy>> {
 	}
 
 	async fetch?(): Promise<T> {
-		if (this.$stored) {
+		if (this.hasPrefetched) {
 			return this.$stored;
 		}
 
@@ -35,12 +36,13 @@ export class ForeignReference<T extends Entity<QueryProxy>> {
 	}
 
 	get hasPrefetched() {
-		return !!this.$stored;
+		return this.$fetched;
 	}
 }
 
 export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TSource, TQueryProxy> {
 	private $stored;
+	private $fetched = false;
 	
 	constructor(
 		public $$item: Entity<QueryProxy>,
@@ -61,7 +63,7 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 	}
 
 	get hasPrefetched() {
-		return !!this.$stored;
+		return this.$fetched;
 	}
 
 	where(query: (item: TQueryProxy) => any): Queryable<TSource, TQueryProxy> {
@@ -78,7 +80,7 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 
 	async toArray(): Promise<TSource[]> {
 		// return prefetched result if there is one
-		if (this.$stored) {
+		if (this.hasPrefetched) {
 			return this.$stored;
 		}
 

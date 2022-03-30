@@ -263,16 +263,21 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 				const idMapping = leaf.find(m => m.path[path.length] == key.replace("$", "") && m.path[path.length + 1] == "id");
 
 				// check if id is null (empty relation target)
-				if (idMapping && raw[idMapping.name]) {
+				if (idMapping && idMapping.name in raw) {
 					// construct prefetched item
-					const child = (new relation.$relation().$$meta.set).constructObject(raw, columnMappings, [
-						...path, 
-						key.replace("$", "")
-					]);
+					let child;
+					
+					if (raw[idMapping.name]) {
+						child = (new relation.$relation().$$meta.set).constructObject(raw, columnMappings, [
+							...path, 
+							key.replace("$", "")
+						]);
+					}
 
 					// store prefetched item into private $stored variable
 					// you should NEVER access this variable
 					// use .fetch() instead!
+					relation["$fetched"] = true;
 					relation["$stored"] = child;
 				} else {
 					relation["$stored"] = null;
@@ -280,7 +285,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			}
 
 			if (relation instanceof PrimaryReference && key in raw) {
-				if (raw[key]) {
+				if (key in raw) {
 					const set = (new relation.$relation()).$$meta.set;
 
 					const items = raw[key].map(item => set.constructObject(item, columnMappings, [
@@ -291,6 +296,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 					// store prefetched result in private $stored variable
 					// you should NEVER access this variable
 					// use .fetch() instead!
+					relation["$fetched"] = true;
 					relation["$stored"] = items;
 				} else {
 					relation["$stored"] = null;
