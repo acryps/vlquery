@@ -288,7 +288,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 				if (key in raw) {
 					const set = (new relation.$relation()).$$meta.set;
 
-					const items = raw[key].map(item => set.constructObject(item, columnMappings, [
+					const items = (raw[key] || []).map(item => set.constructObject(item, columnMappings, [
 						...path,
 						key
 					]));
