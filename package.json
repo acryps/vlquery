@@ -7,7 +7,7 @@
 	"scripts": {
 		"preversion": "git pull",
 		"postversion": "git push",
-		"prepare": "tsc && npx vlquery compile"
+		"prepare": "tsc"
 	},
 	"bin": {
 		"vlquery": "bin/vlquery.js"
