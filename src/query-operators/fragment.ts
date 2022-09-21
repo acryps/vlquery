@@ -8,8 +8,9 @@ import { Query } from "../query";
 import { CompiledQuery } from "../compiled-query";
 import { QueryParameter } from "./parameter";
 import { QueryExtent } from "./extent";
+import { View } from "../view";
 
-export class QueryFragment<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
+export class QueryFragment<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> {
 	compare?: {
 		left: QueryFragment<TModel, TQueryModel>;
 		right: QueryFragment<TModel, TQueryModel>;

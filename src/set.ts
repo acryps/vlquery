@@ -177,7 +177,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	}
 
 	toQuery() {
-		return new Query(this);
+		return new Query(this) as Queryable<TModel, TQueryProxy>;
 	}
 
 	where(query: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy> {

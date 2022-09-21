@@ -2,8 +2,9 @@ import { Entity } from "./entity";
 import { QueryProxy } from "./query-proxy";
 import { Queryable } from "./queryable";
 import { Query } from ".";
+import { View } from "./view";
 
-export class ForeignReference<T extends Entity<QueryProxy>> {
+export class ForeignReference<T extends Entity<QueryProxy> | View<QueryProxy>> {
 	private $stored;
 	private $fetched = false;
 	
@@ -32,7 +33,7 @@ export class ForeignReference<T extends Entity<QueryProxy>> {
 
 		const source = new this.$relation();
 		
-		return await source.$$meta.set.find(this.id) as T;
+		return await (source as Entity<QueryProxy>).$$meta.set.find(this.id) as T;
 	}
 
 	get hasPrefetched() {

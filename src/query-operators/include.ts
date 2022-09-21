@@ -5,6 +5,8 @@ import { DbSet, ForeignReference, PrimaryReference } from "..";
 import { QueryExtent } from "./extent";
 import { QueryJoin } from "./join";
 import { QueryColumnMapping } from "./column-map";
+import { ViewSet } from "../view-set";
+import { View } from "../view";
 
 export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
 	fetchTree: any;
@@ -49,7 +51,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 			if (query.includeClause) {
 				query.includeClause.fetchTree = tree;
 
-				return query.includeClause;
+				return query.includeClause as any;
 			}
 
 			return new QueryInclude<TModel, TQueryModel>(query, tree);
@@ -58,7 +60,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 		}
 	}
 
-	build(leaf, set: DbSet<Entity<QueryProxy>, QueryProxy>, extent: QueryExtent<Entity<QueryProxy>, QueryProxy>, path: string[]) {
+	build(leaf, set: DbSet<Entity<QueryProxy>, QueryProxy> | ViewSet<View<QueryProxy>, QueryProxy>, extent: QueryExtent<Entity<QueryProxy>, QueryProxy>, path: string[]) {
 		const indent = new QueryIncludeIndent(this.query);
 		const proxy = new set.modelConstructor();
 
@@ -176,7 +178,9 @@ class QueryIncludeIndent<TModel extends Entity<TQueryModel>, TQueryModel extends
 		const joins = [];
 
 		for (let child of this.childIndents) {
-			joins.push(`LEFT JOIN ( SELECT ${child.innerExtent.name}.${child.groupedColumn}, json_agg(${child.indent.toSelectSQL()}) AS _ FROM ${child.sourceTable} AS ${child.innerExtent.name} ${child.indent.joins.map(j => j.toSQL()).join(" ")} ${child.indent.toJoinSQL()}${this.query.set.$$meta.active ? ` WHERE ${child.innerExtent.name}.${this.query.set.$$meta.active}` : ""} GROUP BY ${child.innerExtent.name}.${child.groupedColumn} ) AS ${child.exportingExtent.name} ON ${child.parentExtent.name}.id = ${child.exportingExtent.name}.${child.groupedColumn}`);
+			if (this.query.set instanceof DbSet) {
+				joins.push(`LEFT JOIN ( SELECT ${child.innerExtent.name}.${child.groupedColumn}, json_agg(${child.indent.toSelectSQL()}) AS _ FROM ${child.sourceTable} AS ${child.innerExtent.name} ${child.indent.joins.map(j => j.toSQL()).join(" ")} ${child.indent.toJoinSQL()}${this.query.set.$$meta.active ? ` WHERE ${child.innerExtent.name}.${this.query.set.$$meta.active}` : ""} GROUP BY ${child.innerExtent.name}.${child.groupedColumn} ) AS ${child.exportingExtent.name} ON ${child.parentExtent.name}.id = ${child.exportingExtent.name}.${child.groupedColumn}`);
+			}
 		}
 
 		return joins.join("\n");

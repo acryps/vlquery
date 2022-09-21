@@ -11,15 +11,17 @@ import { CompiledQuery } from "./compiled-query";
 import { QueryOrder } from "./query-operators/order";
 import { QueryInclude } from "./query-operators/include";
 import { QueryColumnMapping } from "./query-operators/column-map";
+import { ViewSet } from "./view-set";
+import { View } from "./view";
 
-export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> implements Queryable<TModel, TQueryModel> {
+export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> implements Queryable<TModel, TQueryModel> {
 	public limitRows = -1;
 	public skipRows = -1;
 	public joins: QueryJoin<TModel, TQueryModel>[] = [];
 	public conditions: QueryFragment<TModel, TQueryModel>[] = [];
 	public parameters: QueryParameter<TModel, TQueryModel>[] = [];
 	public orders: QueryOrder<TModel, TQueryModel>[] = [];
-	public includeClause: QueryInclude<TModel, TQueryModel>;
+	public includeClause: QueryInclude<Entity<TQueryModel>, TQueryModel>;
 	public onlyCount: boolean;
 	public rootExtent: QueryExtent<TModel, TQueryModel>;
 	public extentIndex = 0;
@@ -28,7 +30,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 
 	static defaultPageSize = 100;
 	
-	constructor(public set: DbSet<TModel, TQueryModel>, preConditions?: CompiledQuery[]) {
+	constructor(public set: DbSet<Entity<TQueryModel>, TQueryModel> | ViewSet<View<TQueryModel>, TQueryModel>, preConditions?: CompiledQuery[]) {
 		this.rootExtent = new QueryExtent(this);
 
 		if (preConditions) {
@@ -84,17 +86,21 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 			return data.map((c, i, a) => this.mapper(c, i, a));
 		}
 
-		return data;
+		return data as TModel[];
 	}
 
 	include(selector: (item: TModel) => any): Queryable<TModel, TQueryModel> {
-		this.includeClause = new QueryInclude(this, selector);
+		if (this.set instanceof DbSet) {
+			this.includeClause = new QueryInclude(this as Query<Entity<TQueryModel>, TQueryModel>, selector);
+		}
 
 		return this;
 	}
 
 	includeTree(tree: any): Queryable<TModel, TQueryModel> {
-		this.includeClause = new QueryInclude(this, tree);
+		if (this.set instanceof DbSet) {
+			this.includeClause = new QueryInclude(this as Query<Entity<TQueryModel>, TQueryModel>, tree);
+		}
 
 		return this;
 	}
@@ -148,7 +154,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 	toSQL() {
 		const wheres = this.conditions.map(c => c.toSQL());
 
-		if (this.set.$$meta.active) {
+		if (this.set instanceof DbSet && this.set.$$meta.active) {
 			wheres.unshift(`${this.rootExtent.name}.${this.set.$$meta.active}`);
 		}
 
@@ -172,7 +178,9 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 			select = `${this.includeClause.toSelectSQL()} AS _`;
 		}
 
-		return `SELECT ${select} FROM ${this.set.$$meta.tableName} AS ${this.rootExtent.name} ${
+		const source = this.set instanceof DbSet ? this.set.$$meta.tableName : this.set.$$meta.viewName;
+
+		return `SELECT ${select} FROM ${source} AS ${this.rootExtent.name} ${
 			[
 				...this.joins,
 				...this.includeClause?.rootLeaf.joins || []
