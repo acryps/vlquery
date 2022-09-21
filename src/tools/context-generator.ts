@@ -321,7 +321,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 
 			context += `
 class ${convertToViewQueryProxyClassName(view)} extends QueryProxy {
-	${columns.map(column => `get ${
+	${columns.filter(column => column.name != 'id').map(column => `get ${
 		convertToModelName(column.name)
 	}(): Partial<${proxyTypeMapping[column.type]}> { throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime"); }`).join('\n\t')}
 }
