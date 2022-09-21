@@ -339,7 +339,7 @@ export class ${convertToViewClassName(view)} extends View<${convertToViewQueryPr
 }
 			`;
 
-			viewSets.push(`${convertToModelName(view)}: new ViewSet<${convertToViewClassName(view)}>(${convertToViewClassName(view)})`);
+			viewSets.push(`${convertToModelName(view)}: new ViewSet<${convertToViewClassName(view)}, ${convertToViewQueryProxyClassName(view)}>(${convertToViewClassName(view)})`);
 		}
 
 		if (config.context.audit) {
@@ -410,7 +410,7 @@ export class DbContext {
 
 	${sets.join("\n\t")}
 
-	${viewSets.length ? `views: {
+	${viewSets.length ? `views = {
 		${viewSets.join(',\n\t\t')}
 	}` : ''}
 };`;
@@ -419,7 +419,7 @@ export class DbContext {
 export class db {
 	${sets.join("\n\t")}
 
-	${viewSets.length ? `views: {
+	${viewSets.length ? `views = {
 		${viewSets.join(',\n\t\t')}
 	}` : ''}
 
