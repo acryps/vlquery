@@ -278,13 +278,15 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 			convertToClassName(table)
 		}, ${
 			convertToQueryProxyName(table)
-		}> { return new DbSet<${
-			convertToClassName(table)
-		}, ${
-			convertToQueryProxyName(table)
-		}>(${
-			convertToClassName(table)
-		}, null) }${config.context.active ? `,
+		}> { 
+			return new DbSet<${
+				convertToClassName(table)
+			}, ${
+				convertToQueryProxyName(table)
+			}>(${
+				convertToClassName(table)
+			}, null);
+		}${config.context.active ? `,
 		
 		active: ${JSON.stringify(config.context.active)}` : ""}
 	};${constr.trim() ? `
@@ -333,13 +335,15 @@ export class ${convertToViewClassName(view)} extends View<${convertToViewQueryPr
 			convertToViewClassName(view)
 		}, ${
 			convertToViewQueryProxyClassName(view)
-		}> { return new DbSet<${
-			convertToViewClassName(view)
-		}, ${
-			convertToViewQueryProxyClassName(view)
-		}>(${
-			convertToViewClassName(view)
-		}, null) }
+		}> { 
+			return new ViewSet<${
+				convertToViewClassName(view)
+			}, ${
+				convertToViewQueryProxyClassName(view)
+			}>(${
+				convertToViewClassName(view)
+			}, null);
+		},
 
 		columns: {
 			${columns.map(column => `${convertToModelName(column.name)}: { type: ${JSON.stringify(column.type)}, name: ${JSON.stringify(column.name)} }`).join(",\n\t\t\t")}
