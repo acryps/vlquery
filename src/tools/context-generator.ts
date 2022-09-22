@@ -268,7 +268,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 	
 
 	$$meta = {
-		tableName: ${JSON.stringify(table)},
+		source: ${JSON.stringify(table)},
 
 		columns: {
 			${Object.keys(columnMappings).map(key => `${key}: { type: ${JSON.stringify(columnMappings[key].type)}, name: ${JSON.stringify(columnMappings[key].name)} }`).join(",\n\t\t\t")}
@@ -328,7 +328,18 @@ class ${convertToViewQueryProxyClassName(view)} extends QueryProxy {
 
 export class ${convertToViewClassName(view)} extends View<${convertToViewQueryProxyClassName(view)}> {
 	$$meta = {
-		viewName: ${JSON.stringify(view)},
+		source: ${JSON.stringify(view)},
+		get set(): ViewSet<${
+			convertToViewClassName(view)
+		}, ${
+			convertToViewQueryProxyClassName(view)
+		}> { return new DbSet<${
+			convertToViewClassName(view)
+		}, ${
+			convertToViewQueryProxyClassName(view)
+		}>(${
+			convertToViewClassName(view)
+		}, null) }
 
 		columns: {
 			${columns.map(column => `${convertToModelName(column.name)}: { type: ${JSON.stringify(column.type)}, name: ${JSON.stringify(column.name)} }`).join(",\n\t\t\t")}
@@ -375,7 +386,7 @@ DbSet.$audit = {
 		audit.${column} = object;
 				`.trim();
 			} else if (value == "entity") {
-				source = `entity.$$meta.tableName;`;
+				source = `entity.$$meta.source;`;
 			} else if (value == "id") {
 				source = `entity.id.toString();`;
 			}

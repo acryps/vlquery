@@ -28,7 +28,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	}
 	
 	async create(item: TModel, comment?: string) {
-		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.tableName) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
 			if (DbSet.$audit.commentRequired && !comment) {
 				throw new Error("No audit comment for create set!");
 			}
@@ -49,7 +49,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			});
 		}
 
-		const id = (await DbClient.query(`INSERT INTO ${item.$$meta.tableName} ( ${
+		const id = (await DbClient.query(`INSERT INTO ${item.$$meta.source} ( ${
 			["id", ...properties.map(p => p.name)]
 		} ) VALUES ( ${
 			["DEFAULT", ...properties.map((p, i) => (dataTypes[p.type] || Enum).sqlParameterTransform(i + 1, p.value))]
@@ -57,7 +57,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 		item.id = id;
 
-		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.tableName) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
 			(await DbSet.$audit.createAudit("create", comment, item, this.runContext)).create();
 		}
 
@@ -69,7 +69,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			throw new Error("Cannot update entity, an id is required!");
 		}
 
-		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.tableName) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
 			if (DbSet.$audit.commentRequired && !comment) {
 				throw new Error("No audit comment for update set!");
 			}
@@ -83,7 +83,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 		await DbClient.query(`
 		
-			UPDATE ${item.$$meta.tableName} 
+			UPDATE ${item.$$meta.source} 
 			SET ${properties.map((p, i) => `${p.name} = ${(dataTypes[p.type] || Enum).sqlParameterTransform(i + 2, p.value)}`)}
 			WHERE id = $1
 		
@@ -92,7 +92,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			...properties.map(p => (dataTypes[p.type] || Enum).toSQLParameter(p.value))
 		]);
 
-		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.tableName) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
 			(await DbSet.$audit.createAudit("update", comment, item, this.runContext)).create();
 		}
 
@@ -100,7 +100,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	}
 
 	async delete(item: TModel, comment?: string) {
-		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.tableName) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
 			if (DbSet.$audit.commentRequired && !comment) {
 				throw new Error("No audit comment for delete set!");
 			}
@@ -117,7 +117,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 				const count = await column.count();
 
 				if (count) {
-					throw new Error(`Cannot delete '${item.id}' from '${this.$$meta.tableName}'. ${count} items from '${new column.$relation().$$meta.tableName}' still reference it`);
+					throw new Error(`Cannot delete '${item.id}' from '${this.$$meta.source}'. ${count} items from '${new column.$relation().$$meta.source}' still reference it`);
 				}
 			}
 		}
@@ -125,7 +125,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		if (item.$$meta.active) {
 			await DbClient.query(`
 			
-				UPDATE ${item.$$meta.tableName} 
+				UPDATE ${item.$$meta.source} 
 				SET _active = false
 				WHERE id = $1
 			
@@ -135,7 +135,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		} else {
 			await DbClient.query(`
 			
-				DELETE FROM ${item.$$meta.tableName} 
+				DELETE FROM ${item.$$meta.source} 
 				WHERE id = $1
 			
 			`, [
@@ -143,7 +143,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			]);
 		}
 
-		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.tableName) {
+		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
 			(await DbSet.$audit.createAudit("delete", comment, item, this.runContext)).create();
 		}
 	}

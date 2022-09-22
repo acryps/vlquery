@@ -127,7 +127,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel> | View<TQueryModel
 						const join = new QueryJoin(
 							query,
 							extent,
-							(new reference.$relation()).$$meta.tableName,
+							(new reference.$relation()).$$meta.source,
 							reference.$$item.$$meta.columns[reference.$column].name
 						);
 

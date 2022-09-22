@@ -90,17 +90,13 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 	}
 
 	include(selector: (item: TModel) => any): Queryable<TModel, TQueryModel> {
-		if (this.set instanceof DbSet) {
-			this.includeClause = new QueryInclude(this as Query<Entity<TQueryModel>, TQueryModel>, selector);
-		}
+		this.includeClause = new QueryInclude(this, selector);
 
 		return this;
 	}
 
 	includeTree(tree: any): Queryable<TModel, TQueryModel> {
-		if (this.set instanceof DbSet) {
-			this.includeClause = new QueryInclude(this as Query<Entity<TQueryModel>, TQueryModel>, tree);
-		}
+		this.includeClause = new QueryInclude(this, tree);
 
 		return this;
 	}
@@ -178,7 +174,7 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 			select = `${this.includeClause.toSelectSQL()} AS _`;
 		}
 
-		const source = this.set instanceof DbSet ? this.set.$$meta.tableName : this.set.$$meta.viewName;
+		const source = this.set instanceof DbSet ? this.set.$$meta.source : this.set.$$meta.source;
 
 		return `SELECT ${select} FROM ${source} AS ${this.rootExtent.name} ${
 			[

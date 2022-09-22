@@ -1,8 +1,10 @@
-import { QueryProxy } from ".";
+import { QueryProxy, ViewSet } from ".";
 
 export class View<TQueryProxy extends QueryProxy> {
 	$$meta: {
-		viewName: string,
+		source: string,
+		set: ViewSet<View<TQueryProxy>, TQueryProxy>,
+
 		columns: {
 			[key: string]: {
 				name: string,

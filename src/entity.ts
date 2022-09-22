@@ -4,14 +4,16 @@ import { DbSet } from "./set";
 
 export class Entity<TQueryProxy extends QueryProxy> {
 	$$meta: {
-		tableName: string,
+		source: string,
+		set: DbSet<Entity<TQueryProxy>, TQueryProxy>,
+		
 		columns: {
 			[key: string]: {
 				name: string,
 				type: string
 			}
 		} | any,
-		set: DbSet<Entity<TQueryProxy>, TQueryProxy>,
+		
 		active?: string
 	};
 
