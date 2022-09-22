@@ -101,7 +101,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel> | View<TQueryModel>
 					targetExtent = new QueryJoin(
 						this.query, 
 						extent, 
-						proxy.$$meta.source, 
+						meta.source, 
 						proxy.$$meta.columns[reference.$column].name
 					);
 
