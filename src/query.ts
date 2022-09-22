@@ -174,9 +174,7 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 			select = `${this.includeClause.toSelectSQL()} AS _`;
 		}
 
-		const source = this.set instanceof DbSet ? this.set.$$meta.source : this.set.$$meta.source;
-
-		return `SELECT ${select} FROM ${source} AS ${this.rootExtent.name} ${
+		return `SELECT ${select} FROM ${this.set.$$meta.source} AS ${this.rootExtent.name} ${
 			[
 				...this.joins,
 				...this.includeClause?.rootLeaf.joins || []

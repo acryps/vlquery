@@ -113,7 +113,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel> | View<TQueryModel>
 					}
 				}
 
-				indent.merge(this.build(leaf[property], meta.set as DbSet<Entity<TQueryModel>, TQueryModel>, targetExtent.extent, [...path, property]));
+				indent.merge(this.build(leaf[property], meta.set, targetExtent.extent, [...path, property]));
 			} else if (proxy[property] && proxy[property] instanceof PrimaryReference) {
 				const reference = proxy[property] as PrimaryReference<Entity<TQueryModel>, TQueryModel>;
 				const relation = new reference.$relation();
@@ -178,9 +178,7 @@ class QueryIncludeIndent<TModel extends Entity<TQueryModel> | View<TQueryModel>,
 		const joins = [];
 
 		for (let child of this.childIndents) {
-			if (this.query.set instanceof DbSet) {
-				joins.push(`LEFT JOIN ( SELECT ${child.innerExtent.name}.${child.groupedColumn}, json_agg(${child.indent.toSelectSQL()}) AS _ FROM ${child.sourceTable} AS ${child.innerExtent.name} ${child.indent.joins.map(j => j.toSQL()).join(" ")} ${child.indent.toJoinSQL()}${this.query.set.$$meta.active ? ` WHERE ${child.innerExtent.name}.${this.query.set.$$meta.active}` : ""} GROUP BY ${child.innerExtent.name}.${child.groupedColumn} ) AS ${child.exportingExtent.name} ON ${child.parentExtent.name}.id = ${child.exportingExtent.name}.${child.groupedColumn}`);
-			}
+			joins.push(`LEFT JOIN ( SELECT ${child.innerExtent.name}.${child.groupedColumn}, json_agg(${child.indent.toSelectSQL()}) AS _ FROM ${child.sourceTable} AS ${child.innerExtent.name} ${child.indent.joins.map(j => j.toSQL()).join(" ")} ${child.indent.toJoinSQL()}${this.query.set instanceof DbSet && this.query.set.$$meta.active ? ` WHERE ${child.innerExtent.name}.${this.query.set.$$meta.active}` : ""} GROUP BY ${child.innerExtent.name}.${child.groupedColumn} ) AS ${child.exportingExtent.name} ON ${child.parentExtent.name}.id = ${child.exportingExtent.name}.${child.groupedColumn}`);
 		}
 
 		return joins.join("\n");
