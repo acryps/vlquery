@@ -7,7 +7,7 @@
 	"scripts": {
 		"preversion": "git pull",
 		"postversion": "git push",
-		"prepare": "tsc"
+		"prepare": "tsc && node dist/tools/index.js compile"
 	},
 	"bin": {
 		"vlquery": "bin/vlquery.js"
