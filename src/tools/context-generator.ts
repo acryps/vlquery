@@ -15,6 +15,7 @@ export function createContext() {
 			boolean: "boolean",
 			float: "number",
 			float4: "number",
+			float8: "number",
 			real: "number",
 			uuid: "string",
 			timestamp: "Date",
