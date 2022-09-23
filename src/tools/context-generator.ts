@@ -6,24 +6,32 @@ import { config } from "../config";
 export function createContext() {
 	const client = new Client(config.context.connection);
 
-	const typeMapping = {
-		text: "string",
-		int4: "number",
-		integer: "number",
-		bool: "boolean",
-		boolean: "boolean",
-		float: "number",
-		float4: "number",
-		real: "number",
-		uuid: "string",
-		timestamp: "Date",
-		timestamptz: "Date",
-		time: "Date",
-		date: "Date",
-		json: "any",
-		jsonb: "any",
-		bytea: "Buffer"
-	};
+	const getTypeMapping = type => {
+		const types = {
+			text: "string",
+			int4: "number",
+			integer: "number",
+			bool: "boolean",
+			boolean: "boolean",
+			float: "number",
+			float4: "number",
+			real: "number",
+			uuid: "string",
+			timestamp: "Date",
+			timestamptz: "Date",
+			time: "Date",
+			date: "Date",
+			json: "any",
+			jsonb: "any",
+			bytea: "Buffer"
+		}
+		
+		if (type in types) {
+			return types[type];
+		}
+
+		throw new Error(`Type '${type}' not found. Please report an issue at https://github.com/acryps/vlquery/issues`);
+	}
 
 	const proxyTypeMapping = {
 		text: "QueryString",
@@ -225,7 +233,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 			const columnMappings = {};
 
 			for (let column of columns) {
-				let type = typeMapping[column.data_type];
+				let type = getTypeMapping(column.data_type);
 				let proxyType = proxyTypeMapping[column.data_type];
 
 				if (column.data_type in enums) {
@@ -348,7 +356,7 @@ export class ${convertToViewClassName(view)} extends View<${convertToViewQueryPr
 		}
 	};
 
-	${columns.map(column => `${convertToModelName(column.name)}: ${typeMapping[column.type]};`).join('\n\t')}
+	${columns.map(column => `${convertToModelName(column.name)}: ${getTypeMapping(column.type)};`).join('\n\t')}
 }
 			`;
 
