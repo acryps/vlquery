@@ -15,7 +15,6 @@ export function createContext() {
 		float: "number",
 		float4: "number",
 		real: "number",
-		"double precision": "number",
 		uuid: "string",
 		timestamp: "Date",
 		timestamptz: "Date",
@@ -23,8 +22,7 @@ export function createContext() {
 		date: "Date",
 		json: "any",
 		jsonb: "any",
-		bytea: "Buffer",
-		"timestamp without time zone": "Date"
+		bytea: "Buffer"
 	};
 
 	const proxyTypeMapping = {
@@ -34,7 +32,6 @@ export function createContext() {
 		float: "QueryNumber",
 		float4: "QueryNumber",
 		real: "QueryNumber",
-		"double precision": "QueryNumber",
 		bool: "QueryBoolean",
 		boolean: "QueryBoolean",
 		uuid: "QueryUUID",
@@ -44,8 +41,7 @@ export function createContext() {
 		date: "QueryDate",
 		json: "QueryJSON",
 		jsonb: "QueryJSON",
-		bytea: "QueryBuffer",
-		"timestamp without time zone": "QueryTimeStamp"
+		bytea: "QueryBuffer"
 	};
 
 	async function main() {
@@ -318,7 +314,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 
 		for (let view of viewSources.map(view => view.name)) {
 			const columns = (await client.query(`
-				SELECT c.column_name AS name, c.data_type AS type
+				SELECT c.column_name AS name, c.udt_name AS type
 				FROM information_schema.tables t LEFT JOIN information_schema.columns c ON t.table_schema = c.table_schema AND t.table_name = c.table_name
 				WHERE table_type = 'VIEW' AND t.table_schema NOT IN ('information_schema', 'pg_catalog') AND t.table_name = $1
 			`, [view])).rows;
