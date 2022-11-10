@@ -70,12 +70,12 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 		return this.toQuery().where(query);
 	}
 
-	async first(query?: (item: TQueryProxy) => any): Promise<TSource> {
-		return await this.toQuery().first(query);
+	async first(query?: (item: TQueryProxy) => any): Promise<TSource | null> {
+		return await this.toQuery().first(query) ?? null;
 	}
 
-	async single(query?: (item: TQueryProxy) => any): Promise<TSource> {
-		return await this.toQuery().single(query);
+	async single(query?: (item: TQueryProxy) => any): Promise<TSource | null> {
+		return await this.toQuery().single(query) ?? null;
 	}
 
 	async toArray(): Promise<TSource[]> {

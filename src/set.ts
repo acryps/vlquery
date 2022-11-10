@@ -184,12 +184,12 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return this.toQuery().where(query);
 	}
 
-	first(query?: (item: TQueryProxy) => any): Promise<TModel> {
-		return this.toQuery().first(query);
+	first(query?: (item: TQueryProxy) => any): Promise<TModel | null> {
+		return this.toQuery().first(query) ?? null;
 	}
 
-	single(query?: (item: TQueryProxy) => any): Promise<TModel> {
-		return this.toQuery().single(query);
+	single(query?: (item: TQueryProxy) => any): Promise<TModel | null> {
+		return this.toQuery().single(query) ?? null;
 	}
 
 	toArray(): Promise<TModel[]> {

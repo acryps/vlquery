@@ -49,17 +49,17 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 		return this;
 	}
 
-	async first(query?: (item: TQueryModel) => any): Promise<TModel> {
+	async first(query?: (item: TQueryModel) => any): Promise<TModel | null> {
 		if (query) {
 			this.where(query);
 		}
 
 		this.limit(1);
 
-		return (await this.toArray())[0];
+		return (await this.toArray())[0] ?? null;
 	}
 
-	async single(query?: (item: TQueryModel) => any): Promise<TModel> {
+	async single(query?: (item: TQueryModel) => any): Promise<TModel | null> {
 		if (query) {
 			this.where(query);
 		}
@@ -70,7 +70,7 @@ export class Query<TModel extends Entity<TQueryModel>, TQueryModel extends Query
 			throw new Error(`Single query returned ${res.length == 0 ? "no" : "multiple"} items`);
 		}
 
-		return res[0];
+		return res[0] ?? null;
 	}
 
 	private async toArrayRaw(): Promise<any[]> {
