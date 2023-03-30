@@ -310,7 +310,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 
 			sets.push({
 				declaration: `${config.context.runContext ? "" : "static "}${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>`,
-				initialization: `${config.context.runContext ? convertToModelName(table) : ""} = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}${config.context.runContext ? ", this.runContext" : ""});`
+				initialization: `${config.context.runContext ? `this.${convertToModelName(table)}` : ""} = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}${config.context.runContext ? ", this.runContext" : ""});`
 			});
 
 			config.compile.verbose && console.groupEnd();
