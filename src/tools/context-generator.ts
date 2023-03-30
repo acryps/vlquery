@@ -242,7 +242,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 				}
 				
 				if (!type) {
-					throw new Error(`Unsupported column type '${column.data_type}'`);
+					throw new Error(`Unsupported column type '${column.data_type}' in column '${column.column_name}'`);
 				}
 
 				columnMappings[convertToModelName(column.column_name)] = {
@@ -252,7 +252,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 
 				config.compile.verbose && console.log(column.column_name, column.data_type, type);
 
-				body += `${convertToModelName(column.column_name)}: ${type};\n\t`;
+				body += `${column.column_name == 'id' ? 'declare ' : ''}${convertToModelName(column.column_name)}: ${type};\n\t`;
 					
 				if (column.column_name != "id") {
 					proxyBody += `get ${
@@ -308,7 +308,10 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 }
 			`;
 
-			sets.push(`${config.context.runContext ? "" : "static "}${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}${config.context.runContext ? ", this.runContext" : ""});`);
+			sets.push({
+				declaration: `${config.context.runContext ? "" : "static "}${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>`,
+				initialization: `${config.context.runContext ? convertToModelName(table) : ""} = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}${config.context.runContext ? ", this.runContext" : ""});`
+			});
 
 			config.compile.verbose && console.groupEnd();
 		}
@@ -418,7 +421,11 @@ DbSet.$audit = {
 		if (config.context.runContext) {
 			context += `\n
 export class DbContext {
-	constructor(private runContext: RunContext) {}
+	${sets.map(set => `${set.declaration};`).join("\n\t")}
+
+	constructor(private runContext: RunContext) {
+		${sets.map(set => set.initialization).join("\n\t\t")}
+	}
 
 	findSet(modelType) {
 		for (let key in this) {
@@ -430,8 +437,6 @@ export class DbContext {
 		}
 	}
 
-	${sets.join("\n\t")}
-
 	${viewSets.length ? `views = {
 		${viewSets.join(',\n\t\t')}
 	}` : ''}
@@ -439,7 +444,7 @@ export class DbContext {
 		} else {
 			context += `\n
 export class db {
-	${sets.join("\n\t")}
+	${sets.map(set => `${set.declaration}${set.initialization}`).join("\n\t")}
 
 	${viewSets.length ? `views = {
 		${viewSets.join(',\n\t\t')}
