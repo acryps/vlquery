@@ -6,6 +6,8 @@ import { config } from "../config";
 export function createContext() {
 	const client = new Client(config.context.connection);
 
+	let enums = {};
+
 	const getTypeMapping = type => {
 		const types = {
 			text: "string",
@@ -29,6 +31,10 @@ export function createContext() {
 		
 		if (type in types) {
 			return types[type];
+		}
+
+		if (type in enums) {
+			return;
 		}
 
 		throw new Error(`Type '${type}' not found. Please report an issue at https://github.com/acryps/vlquery/issues`);
@@ -76,8 +82,6 @@ export function createContext() {
 		function convertToViewQueryProxyClassName(name: string) {
 			return `${convertToViewClassName(name)}Proxy`;
 		}
-
-		let enums = {};
 
 		for (let row of (await client.query(`
 			SELECT 
