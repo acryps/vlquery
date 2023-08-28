@@ -174,11 +174,11 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 			select = `${this.includeClause.toSelectSQL()} AS _`;
 		}
 
-		return `SELECT ${select} FROM ${this.set.$$meta.source} AS ${this.rootExtent.name} ${
+		return `SELECT ${select} FROM "${this.set.$$meta.source}" AS ${this.rootExtent.name} ${
 			[
 				...this.joins,
 				...this.includeClause?.rootLeaf.joins || []
-			].map(j => j.toSQL()).join("\n")
+			].map(join => join.toSQL()).join("\n")
 		} ${
 			this.includeClause?.toJoinSQL() || ""
 		} ${

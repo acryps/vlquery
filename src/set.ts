@@ -135,7 +135,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		} else {
 			await DbClient.query(`
 			
-				DELETE FROM ${item.$$meta.source} 
+				DELETE FROM "${item.$$meta.source}"
 				WHERE id = $1
 			
 			`, [
