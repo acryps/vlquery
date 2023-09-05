@@ -151,26 +151,39 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 			}
 
 			const constraints = (await client.query(`
-				SELECT
-					tc.constraint_name, 
-					tc.table_name, 
-					kcu.column_name, 
-					ccu.table_name AS foreign_table_name,
-					ccu.column_name AS foreign_column_name 
-				FROM  information_schema.table_constraints AS tc 
-					JOIN information_schema.key_column_usage AS kcu
-						ON tc.constraint_name = kcu.constraint_name
-					JOIN information_schema.constraint_column_usage AS ccu
-					ON ccu.constraint_name = tc.constraint_name
-				WHERE constraint_type = 'FOREIGN KEY' 
-					AND (tc.table_name = $1 OR ccu.table_name = $1)
-				GROUP BY tc.constraint_name, tc.table_name, kcu.column_name, foreign_table_name, foreign_column_name
+				SELECT 
+					constraint_source.conname AS constraint_name,
+					source_table.relname AS table_name,
+					key_column.attname AS column_name,
+					target_table.relname AS foreign_table_name,
+					target_column.attname AS foreign_column_name
+				FROM
+					pg_constraint AS constraint_source
+					
+					JOIN pg_class source_table
+						ON source_table.oid = constraint_source.conrelid
+						
+					JOIN pg_attribute key_column
+						ON key_column.attnum = ANY(constraint_source.conkey)
+							AND key_column.attrelid = constraint_source.conrelid
+							AND NOT key_column.attisdropped
+							
+					JOIN pg_class target_table
+						ON target_table.oid = constraint_source.confrelid
+						
+					JOIN pg_attribute target_column
+						ON target_column.attnum = ANY(constraint_source.confkey)
+							AND target_column.attrelid = constraint_source.confrelid
+							AND NOT key_column.attisdropped
+				WHERE
+					constraint_source.contype = 'f'
+					AND (source_table.relname = $1 OR target_table.relname = $1)
 			`, [table])).rows;
 
-			let constr = ``;
-			let body = ``;
-			let shadowBody = ``;
-			let proxyBody = ``;
+			let constr = '';
+			let body = '';
+			let shadowBody = '';
+			let proxyBody = '';
 
 			config.compile.verbose && console.group("constraints");
 
