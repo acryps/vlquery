@@ -49,7 +49,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			});
 		}
 
-		const id = (await DbClient.query(`INSERT INTO ${item.$$meta.source} ( ${
+		const id = (await DbClient.query(`INSERT INTO ${JSON.stringify(item.$$meta.source)} ( ${
 			["id", ...properties.map(p => p.name)]
 		} ) VALUES ( ${
 			["DEFAULT", ...properties.map((p, i) => (dataTypes[p.type] || Enum).sqlParameterTransform(i + 1, p.value))]
