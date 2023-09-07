@@ -83,8 +83,8 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 		await DbClient.query(`
 		
-			UPDATE ${item.$$meta.source} 
-			SET ${properties.map((p, i) => `${p.name} = ${(dataTypes[p.type] || Enum).sqlParameterTransform(i + 2, p.value)}`)}
+			UPDATE ${JSON.stringify(item.$$meta.source)} 
+			SET ${properties.map((p, i) => `${p.name} = ${(dataTypes[p.type] || Enum).sqlParameterTransform(i + 2, p.value)}`)}
 			WHERE id = $1
 		
 		`, [
@@ -125,7 +125,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		if (item.$$meta.active) {
 			await DbClient.query(`
 			
-				UPDATE ${item.$$meta.source} 
+				UPDATE ${JSON.stringify(item.$$meta.source)} 
 				SET _active = false
 				WHERE id = $1
 			
@@ -135,7 +135,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		} else {
 			await DbClient.query(`
 			
-				DELETE FROM "${item.$$meta.source}"
+				DELETE FROM ${JSON.stringify(item.$$meta.source)}
 				WHERE id = $1
 			
 			`, [
