@@ -8,8 +8,9 @@ import { Query } from "../query";
 import { CompiledQuery, CompiledQueryCall } from "../compiled-query";
 import { QueryFunction, queryFunctions } from "../functions";
 import { QueryFragment } from "./fragment";
+import { View } from "../view";
 
-export class QueryOrder<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
+export class QueryOrder<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> {
 	children: QueryOrder<TModel, TQueryModel>[];
 
 	extent: QueryExtent<TModel, TQueryModel>;

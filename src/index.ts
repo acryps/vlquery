@@ -8,3 +8,5 @@ export * from "./set";
 export * from "./query-types";
 export * from "./run-context";
 export * from "./enum";
+export * from "./view";
+export * from "./view-set";

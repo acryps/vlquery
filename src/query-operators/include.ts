@@ -5,8 +5,10 @@ import { DbSet, ForeignReference, PrimaryReference } from "..";
 import { QueryExtent } from "./extent";
 import { QueryJoin } from "./join";
 import { QueryColumnMapping } from "./column-map";
+import { ViewSet } from "../view-set";
+import { View } from "../view";
 
-export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
+export class QueryInclude<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> {
 	fetchTree: any;
 	rootLeaf: QueryIncludeIndent<TModel, TQueryModel>;
 	
@@ -49,7 +51,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 			if (query.includeClause) {
 				query.includeClause.fetchTree = tree;
 
-				return query.includeClause;
+				return query.includeClause as any;
 			}
 
 			return new QueryInclude<TModel, TQueryModel>(query, tree);
@@ -58,7 +60,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 		}
 	}
 
-	build(leaf, set: DbSet<Entity<QueryProxy>, QueryProxy>, extent: QueryExtent<Entity<QueryProxy>, QueryProxy>, path: string[]) {
+	build(leaf, set: DbSet<Entity<QueryProxy>, QueryProxy> | ViewSet<View<QueryProxy>, QueryProxy>, extent: QueryExtent<Entity<QueryProxy>, QueryProxy> | QueryExtent<View<QueryProxy>, QueryProxy>, path: string[]) {
 		const indent = new QueryIncludeIndent(this.query);
 		const proxy = new set.modelConstructor();
 
@@ -87,7 +89,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 
 				// only search for extisting join if on the first level
 				if (extent == this.query.rootExtent) {
-					const join = this.query.joins.find(j => j.table == meta.tableName && j.column == proxy.$$meta.columns[reference.$column].name);
+					const join = this.query.joins.find(j => j.table == meta.source && j.column == proxy.$$meta.columns[reference.$column].name);
 
 					if (join) {
 						targetExtent = join;
@@ -99,7 +101,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 					targetExtent = new QueryJoin(
 						this.query, 
 						extent, 
-						meta.tableName, 
+						meta.source, 
 						proxy.$$meta.columns[reference.$column].name
 					);
 
@@ -113,17 +115,17 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 
 				indent.merge(this.build(leaf[property], meta.set, targetExtent.extent, [...path, property]));
 			} else if (proxy[property] && proxy[property] instanceof PrimaryReference) {
-				const reference = proxy[property] as PrimaryReference<TModel, TQueryModel>;
-				const meta = (new reference.$relation()).$$meta;
+				const reference = proxy[property] as PrimaryReference<Entity<TQueryModel>, TQueryModel>;
+				const relation = new reference.$relation();
 
 				const group = new QueryIncludeIndentGroup();
 				group.mappedName = property;
 				group.parentExtent = extent;
 				group.exportingExtent = new QueryExtent(this.query);
 				group.innerExtent = new QueryExtent(this.query);
-				group.groupedColumn = meta.columns[reference.$column].name;
-				group.sourceTable = meta.tableName;
-				group.indent = this.build(leaf[property], meta.set, group.innerExtent, [...path, property]);
+				group.groupedColumn = relation.$$meta.columns[reference.$column].name;
+				group.sourceTable = relation.$$meta.source;
+				group.indent = this.build(leaf[property], relation.$$meta.set, group.innerExtent, [...path, property]);
 
 				indent.childIndents.push(group);
 			}
@@ -145,7 +147,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel>, TQueryModel extend
 	}
 }
 
-class QueryIncludeIndent<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
+class QueryIncludeIndent<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> {
 	properties: QueryIncludeNode<TModel, TQueryModel>[] = [];
 	joins: QueryJoin<TModel, TQueryModel>[] = [];
 	childIndents: QueryIncludeIndentGroup<TModel, TQueryModel>[] = [];
@@ -176,14 +178,14 @@ class QueryIncludeIndent<TModel extends Entity<TQueryModel>, TQueryModel extends
 		const joins = [];
 
 		for (let child of this.childIndents) {
-			joins.push(`LEFT JOIN ( SELECT ${child.innerExtent.name}.${child.groupedColumn}, json_agg(${child.indent.toSelectSQL()}) AS _ FROM ${child.sourceTable} AS ${child.innerExtent.name} ${child.indent.joins.map(j => j.toSQL()).join(" ")} ${child.indent.toJoinSQL()}${this.query.set.$$meta.active ? ` WHERE ${child.innerExtent.name}.${this.query.set.$$meta.active}` : ""} GROUP BY ${child.innerExtent.name}.${child.groupedColumn} ) AS ${child.exportingExtent.name} ON ${child.parentExtent.name}.id = ${child.exportingExtent.name}.${child.groupedColumn}`);
+			joins.push(`LEFT JOIN ( SELECT ${child.innerExtent.name}.${child.groupedColumn}, json_agg(${child.indent.toSelectSQL()}) AS _ FROM ${JSON.stringify(child.sourceTable)} AS ${child.innerExtent.name} ${child.indent.joins.map(j => j.toSQL()).join(" ")} ${child.indent.toJoinSQL()}${this.query.set instanceof DbSet && this.query.set.$$meta.active ? ` WHERE ${child.innerExtent.name}.${this.query.set.$$meta.active}` : ""} GROUP BY ${child.innerExtent.name}.${child.groupedColumn} ) AS ${child.exportingExtent.name} ON ${child.parentExtent.name}.id = ${child.exportingExtent.name}.${child.groupedColumn}`);
 		}
 
 		return joins.join("\n");
 	}
 }
 
-class QueryIncludeIndentGroup<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
+class QueryIncludeIndentGroup<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> {
 	exportingExtent: QueryExtent<TModel, TQueryModel>;
 	innerExtent: QueryExtent<TModel, TQueryModel>;
 	parentExtent: QueryExtent<TModel, TQueryModel>;
@@ -195,7 +197,7 @@ class QueryIncludeIndentGroup<TModel extends Entity<TQueryModel>, TQueryModel ex
 	indent: QueryIncludeIndent<TModel, TQueryModel>;
 }
 
-class QueryIncludeNode<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
+class QueryIncludeNode<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> {
 	name: string;
 	extent: QueryExtent<TModel, TQueryModel>;
 	to: QueryColumnMapping<TModel, TQueryModel>;

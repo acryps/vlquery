@@ -1,7 +1,8 @@
 import { Entity } from "./entity"
 import { QueryProxy } from "./query-proxy";
+import { View } from "./view";
 
-export interface Queryable<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> {
+export interface Queryable<TModel extends Entity<TQueryProxy> | View<TQueryProxy>, TQueryProxy extends QueryProxy> {
 	// query types
 	where(query: (item: TQueryProxy) => any): Queryable<TModel, TQueryProxy>;
 	first(query?: (item: TQueryProxy) => any): Promise<TModel>;

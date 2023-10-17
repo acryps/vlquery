@@ -20,7 +20,9 @@ export class DbClient {
 
 		// reset open connections
 		for (let client of this.clients) {
-			client.release();
+			try {
+				client.release();
+			} catch {}
 		}
 
 		this.clients = [];

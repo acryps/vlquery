@@ -1,6 +1,7 @@
 import { Entity, QueryProxy, Query } from "..";
+import { View } from "../view";
 
-export class QueryColumnMapping<TModel extends Entity<TQueryModel>, TQueryModel extends QueryProxy> {
+export class QueryColumnMapping<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> {
 	public name: string;
 	
 	constructor(

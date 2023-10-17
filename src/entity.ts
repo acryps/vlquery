@@ -4,14 +4,16 @@ import { DbSet } from "./set";
 
 export class Entity<TQueryProxy extends QueryProxy> {
 	$$meta: {
-		tableName: string,
+		source: string,
+		set: DbSet<Entity<TQueryProxy>, TQueryProxy>,
+		
 		columns: {
 			[key: string]: {
 				name: string,
 				type: string
 			}
 		} | any,
-		set: DbSet<Entity<TQueryProxy>, TQueryProxy>,
+		
 		active?: string
 	};
 
@@ -20,7 +22,7 @@ export class Entity<TQueryProxy extends QueryProxy> {
 	// while only keeping the ForeignReference<Entity> for the get accessor
 	get $$item(): Entity<QueryProxy> { throw new Error("Cannot get $$item during runtime"); }
 
-	id: string | number;
+	id: string | number;
 
 	async create(comment?: string): Promise<this> {
 		return await this.$$meta.set.create(this, comment) as this;

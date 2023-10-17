@@ -6,24 +6,39 @@ import { config } from "../config";
 export function createContext() {
 	const client = new Client(config.context.connection);
 
-	const typeMapping = {
-		text: "string",
-		int4: "number",
-		integer: "number",
-		bool: "boolean",
-		boolean: "boolean",
-		float: "number",
-		float4: "number",
-		real: "number",
-		uuid: "string",
-		timestamp: "Date",
-		timestamptz: "Date",
-		time: "Date",
-		date: "Date",
-		json: "any",
-		jsonb: "any",
-		bytea: "Buffer"
-	};
+	let enums = {};
+
+	const getTypeMapping = type => {
+		const types = {
+			text: "string",
+			int4: "number",
+			integer: "number",
+			bool: "boolean",
+			boolean: "boolean",
+			float: "number",
+			float4: "number",
+			float8: "number",
+			real: "number",
+			uuid: "string",
+			timestamp: "Date",
+			timestamptz: "Date",
+			time: "Date",
+			date: "Date",
+			json: "any",
+			jsonb: "any",
+			bytea: "Buffer"
+		}
+		
+		if (type in types) {
+			return types[type];
+		}
+
+		if (type in enums) {
+			return;
+		}
+
+		throw new Error(`Type '${type}' not found. Please report an issue at https://github.com/acryps/vlquery/issues`);
+	}
 
 	const proxyTypeMapping = {
 		text: "QueryString",
@@ -60,7 +75,13 @@ export function createContext() {
 			return `${convertToClassName(name)}QueryProxy`;
 		}
 
-		let enums = {};
+		function convertToViewClassName(name: string) {
+			return `${convertToClassName(name)}View`;
+		}
+
+		function convertToViewQueryProxyClassName(name: string) {
+			return `${convertToViewClassName(name)}Proxy`;
+		}
 
 		for (let row of (await client.query(`
 			SELECT 
@@ -88,7 +109,7 @@ export function createContext() {
 		`)).rows;
 
 		let context = `
-import { Entity, DbSet, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSON, QueryTimeStamp, QueryNumber, QueryTime, QueryDate, QueryBoolean, QueryBuffer, QueryEnum, ForeignReference, PrimaryReference } from "vlquery";
+import { Entity, DbSet, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSON, QueryTimeStamp, QueryNumber, QueryTime, QueryDate, QueryBoolean, QueryBuffer, QueryEnum, ForeignReference, PrimaryReference, View, ViewSet } from "vlquery";
 		`.trim() + "\n";
 		let sets = [];
 
@@ -130,26 +151,39 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 			}
 
 			const constraints = (await client.query(`
-				SELECT
-					tc.constraint_name, 
-					tc.table_name, 
-					kcu.column_name, 
-					ccu.table_name AS foreign_table_name,
-					ccu.column_name AS foreign_column_name 
-				FROM  information_schema.table_constraints AS tc 
-					JOIN information_schema.key_column_usage AS kcu
-						ON tc.constraint_name = kcu.constraint_name
-					JOIN information_schema.constraint_column_usage AS ccu
-					ON ccu.constraint_name = tc.constraint_name
-				WHERE constraint_type = 'FOREIGN KEY' 
-					AND (tc.table_name = $1 OR ccu.table_name = $1)
-				GROUP BY tc.constraint_name, tc.table_name, kcu.column_name, foreign_table_name, foreign_column_name
+				SELECT 
+					constraint_source.conname AS constraint_name,
+					source_table.relname AS table_name,
+					key_column.attname AS column_name,
+					target_table.relname AS foreign_table_name,
+					target_column.attname AS foreign_column_name
+				FROM
+					pg_constraint AS constraint_source
+					
+					JOIN pg_class source_table
+						ON source_table.oid = constraint_source.conrelid
+						
+					JOIN pg_attribute key_column
+						ON key_column.attnum = ANY(constraint_source.conkey)
+							AND key_column.attrelid = constraint_source.conrelid
+							AND NOT key_column.attisdropped
+							
+					JOIN pg_class target_table
+						ON target_table.oid = constraint_source.confrelid
+						
+					JOIN pg_attribute target_column
+						ON target_column.attnum = ANY(constraint_source.confkey)
+							AND target_column.attrelid = constraint_source.confrelid
+							AND NOT key_column.attisdropped
+				WHERE
+					constraint_source.contype = 'f'
+					AND (source_table.relname = $1 OR target_table.relname = $1)
 			`, [table])).rows;
 
-			let constr = ``;
-			let body = ``;
-			let shadowBody = ``;
-			let proxyBody = ``;
+			let constr = '';
+			let body = '';
+			let shadowBody = '';
+			let proxyBody = '';
 
 			config.compile.verbose && console.group("constraints");
 
@@ -217,7 +251,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 			const columnMappings = {};
 
 			for (let column of columns) {
-				let type = typeMapping[column.data_type];
+				let type = getTypeMapping(column.data_type);
 				let proxyType = proxyTypeMapping[column.data_type];
 
 				if (column.data_type in enums) {
@@ -225,7 +259,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 				}
 				
 				if (!type) {
-					throw new Error(`Unsupported column type '${column.data_type}'`);
+					throw new Error(`Unsupported column type '${column.data_type}' in column '${column.column_name}'`);
 				}
 
 				columnMappings[convertToModelName(column.column_name)] = {
@@ -235,7 +269,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 
 				config.compile.verbose && console.log(column.column_name, column.data_type, type);
 
-				body += `${convertToModelName(column.column_name)}: ${type};\n\t`;
+				body += `${column.column_name == 'id' ? 'declare ' : ''}${convertToModelName(column.column_name)}: ${type};\n\t`;
 					
 				if (column.column_name != "id") {
 					proxyBody += `get ${
@@ -258,7 +292,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 	
 
 	$$meta = {
-		tableName: ${JSON.stringify(table)},
+		source: ${JSON.stringify(table)},
 
 		columns: {
 			${Object.keys(columnMappings).map(key => `${key}: { type: ${JSON.stringify(columnMappings[key].type)}, name: ${JSON.stringify(columnMappings[key].name)} }`).join(",\n\t\t\t")}
@@ -268,13 +302,15 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 			convertToClassName(table)
 		}, ${
 			convertToQueryProxyName(table)
-		}> { return new DbSet<${
-			convertToClassName(table)
-		}, ${
-			convertToQueryProxyName(table)
-		}>(${
-			convertToClassName(table)
-		}, null) }${config.context.active ? `,
+		}> { 
+			return new DbSet<${
+				convertToClassName(table)
+			}, ${
+				convertToQueryProxyName(table)
+			}>(${
+				convertToClassName(table)
+			}, null);
+		}${config.context.active ? `,
 		
 		active: ${JSON.stringify(config.context.active)}` : ""}
 	};${constr.trim() ? `
@@ -289,9 +325,63 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 }
 			`;
 
-			sets.push(`${config.context.runContext ? "" : "static "}${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}> = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}${config.context.runContext ? ", this.runContext" : ""});`);
+			sets.push({
+				declaration: `${config.context.runContext ? "" : "static "}${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>`,
+				initialization: `${config.context.runContext ? `this.${convertToModelName(table)}` : ""} = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}${config.context.runContext ? ", this.runContext" : ""});`
+			});
 
 			config.compile.verbose && console.groupEnd();
+		}
+
+		const viewSources = (await client.query(`
+			SELECT viewname AS name
+			FROM pg_views
+			WHERE schemaname = 'public'
+		`)).rows;
+
+		const viewSets = [];
+
+		for (let view of viewSources.map(view => view.name)) {
+			const columns = (await client.query(`
+				SELECT c.column_name AS name, c.udt_name AS type
+				FROM information_schema.tables t LEFT JOIN information_schema.columns c ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+				WHERE table_type = 'VIEW' AND t.table_schema NOT IN ('information_schema', 'pg_catalog') AND t.table_name = $1
+			`, [view])).rows;
+
+			context += `
+class ${convertToViewQueryProxyClassName(view)} extends QueryProxy {
+	${columns.filter(column => column.name != 'id').map(column => `get ${
+		convertToModelName(column.name)
+	}(): Partial<${proxyTypeMapping[column.type]}> { throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime"); }`).join('\n\t')}
+}
+
+export class ${convertToViewClassName(view)} extends View<${convertToViewQueryProxyClassName(view)}> {
+	$$meta = {
+		source: ${JSON.stringify(view)},
+		get set(): ViewSet<${
+			convertToViewClassName(view)
+		}, ${
+			convertToViewQueryProxyClassName(view)
+		}> { 
+			return new ViewSet<${
+				convertToViewClassName(view)
+			}, ${
+				convertToViewQueryProxyClassName(view)
+			}>(${
+				convertToViewClassName(view)
+			}, null);
+		},
+
+		columns: {
+			${columns.map(column => `${convertToModelName(column.name)}: { type: ${JSON.stringify(column.type)}, name: ${JSON.stringify(column.name)} }`).join(",\n\t\t\t")}
+		}
+	};
+
+	${columns.map(column => `${convertToModelName(column.name)}: ${getTypeMapping(column.type)};`).join('\n\t')}
+}
+			`;
+
+			viewSets.push(`${convertToModelName(view)}: new ViewSet<${convertToViewClassName(view)}, ${convertToViewQueryProxyClassName(view)}>(${convertToViewClassName(view)})`);
 		}
 
 		if (config.context.audit) {
@@ -327,7 +417,7 @@ DbSet.$audit = {
 		audit.${column} = object;
 				`.trim();
 			} else if (value == "entity") {
-				source = `entity.$$meta.tableName;`;
+				source = `entity.$$meta.source;`;
 			} else if (value == "id") {
 				source = `entity.id.toString();`;
 			}
@@ -348,7 +438,11 @@ DbSet.$audit = {
 		if (config.context.runContext) {
 			context += `\n
 export class DbContext {
-	constructor(private runContext: RunContext) {}
+	${sets.map(set => `${set.declaration};`).join("\n\t")}
+
+	constructor(private runContext: RunContext) {
+		${sets.map(set => set.initialization).join("\n\t\t")}
+	}
 
 	findSet(modelType) {
 		for (let key in this) {
@@ -360,12 +454,18 @@ export class DbContext {
 		}
 	}
 
-	${sets.join("\n\t")}
+	${viewSets.length ? `views = {
+		${viewSets.join(',\n\t\t')}
+	}` : ''}
 };`;
 		} else {
 			context += `\n
 export class db {
-	${sets.join("\n\t")}
+	${sets.map(set => `${set.declaration}${set.initialization}`).join("\n\t")}
+
+	${viewSets.length ? `views = {
+		${viewSets.join(',\n\t\t')}
+	}` : ''}
 
 	static findSet(modelType) {
 		for (let key in this) {

@@ -1,6 +1,6 @@
 {
 	"context": {
-		"outFile": "db-context.ts",
+		"outFile": "dist/db-context.ts",
 		"active": "_active"
 	},
 	"compile": {

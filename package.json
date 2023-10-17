@@ -1,13 +1,13 @@
 {
 	"name": "vlquery",
-	"version": "5.5.5",
+	"version": "7.0.13",
 	"description": "VLQuery ORM",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
 	"scripts": {
 		"preversion": "git pull",
 		"postversion": "git push",
-		"prepare": "tsc && npx vlquery compile"
+		"prepare": "tsc && node dist/tools/index.js compile"
 	},
 	"bin": {
 		"vlquery": "bin/vlquery.js"
