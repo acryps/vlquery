@@ -214,8 +214,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 						convertToModelName(parts[0])
 					}; }\n\t`
 
-					shadowBody += `
-	private $${convertToModelName(parts[0])}: ForeignReference<${convertToClassName(constraint.foreign_table_name)}>;
+					shadowBody += `private $${convertToModelName(parts[0])}: ForeignReference<${convertToClassName(constraint.foreign_table_name)}>;
 
 	set ${convertToModelName(parts[0])}(value: Partial<ForeignReference<${convertToClassName(constraint.foreign_table_name)}>>) {
 		if (value) {
@@ -225,8 +224,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 		} else {
 			this.${convertToModelName(constraint.column_name)} = null;
 		}
-	}
-					`;
+	}\n\n\t`;
 
 					proxyBody += `get ${
 						convertToModelName(parts[0])
@@ -293,14 +291,11 @@ export class ${convertToQueryProxyName(table)} extends QueryProxy {
 export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyName(table)}> {
 	${body.trim()}
 	
-
 	$$meta = {
 		source: ${JSON.stringify(table)},
-
 		columns: {
 			${Object.keys(columnMappings).map(key => `${key}: { type: ${JSON.stringify(columnMappings[key].type)}, name: ${JSON.stringify(columnMappings[key].name)} }`).join(",\n\t\t\t")}
 		},
-
 		get set(): DbSet<${
 			convertToClassName(table)
 		}, ${
