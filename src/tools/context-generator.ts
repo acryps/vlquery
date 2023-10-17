@@ -106,10 +106,11 @@ export function createContext() {
 			SELECT tablename 
 			FROM pg_tables
 			WHERE schemaname = 'public'
+			ORDER BY tablename
 		`)).rows;
 
 		let context = `
-import { Entity, DbSet, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSON, QueryTimeStamp, QueryNumber, QueryTime, QueryDate, QueryBoolean, QueryBuffer, QueryEnum, ForeignReference, PrimaryReference, View, ViewSet } from "vlquery";
+import { Entity, DbSet, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSON, QueryTimeStamp, QueryNumber, QueryTime, QueryDate, QueryBoolean, QueryBuffer, QueryEnum, ForeignReference, PrimaryReference, View, ViewSet } from 'vlquery';
 		`.trim() + "\n";
 		let sets = [];
 
@@ -137,6 +138,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 					udt_name AS data_type
 				FROM INFORMATION_SCHEMA.COLUMNS 
 					WHERE table_name = $1${config.context.active ? ` AND column_name NOT IN ('${config.context.active}')`: ""}
+				ORDER BY column_name
 			`, [
 				table
 			])).rows;
@@ -178,6 +180,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 				WHERE
 					constraint_source.contype = 'f'
 					AND (source_table.relname = $1 OR target_table.relname = $1)
+				ORDER BY constraint_name, table_name, foreign_table_name
 			`, [table])).rows;
 
 			let constr = '';
@@ -203,7 +206,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 						JSON.stringify(convertToModelName(constraint.column_name))
 					}, ${
 						convertToClassName(constraint.foreign_table_name)
-					});\n\t\t`;
+					});\n\t`;
 
 					body += `get ${convertToModelName(parts[0])}(): Partial<ForeignReference<${
 						convertToClassName(constraint.foreign_table_name)
