@@ -22,8 +22,8 @@ export class QueryFunction {
 
 export const queryFunctions = {
 	// date operators
-	isAfter: new QueryFunction(1, (body, parameters) => `date_trunc('milliseconds', ${body}) > date_trunc('milliseconds', ${parameters[0].toSQL()})`),
-	isBefore: new QueryFunction(1, (body, parameters) => `date_trunc('milliseconds', ${body}) < date_trunc('milliseconds', ${parameters[0].toSQL()})`),
+	isAfter: new QueryFunction(1, (body, parameters) => `date_trunc('milliseconds', ${body}::TIMESTAMP) > date_trunc('milliseconds', ${parameters[0].toSQL()}::TIMESTAMP)`),
+	isBefore: new QueryFunction(1, (body, parameters) => `date_trunc('milliseconds', ${body}::TIMESTAMP) < date_trunc('milliseconds', ${parameters[0].toSQL()}::TIMESTAMP)`),
 	isToday: new QueryFunction(0, body => `${body} = CURRENT_DATE`),
 	toDate: new QueryFunction(0, body => `${body}::DATE`),
 	toISODate: new QueryFunction(0, body => `to_json(${body})#>>'{}'`),
