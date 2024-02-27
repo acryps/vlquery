@@ -50,7 +50,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		}
 
 		const id = (await DbClient.query(`INSERT INTO ${JSON.stringify(item.$$meta.source)} ( ${
-			["id", ...properties.map(p => p.name)]
+			["id", ...properties.map(p => `"${p.name}"`)]
 		} ) VALUES ( ${
 			["DEFAULT", ...properties.map((p, i) => (dataTypes[p.type] || Enum).sqlParameterTransform(i + 1, p.value))]
 		} ) RETURNING id`, properties.map(p => (dataTypes[p.type] || Enum).toSQLParameter(p.value))))[0].id;
@@ -84,7 +84,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		await DbClient.query(`
 		
 			UPDATE ${JSON.stringify(item.$$meta.source)} 
-			SET ${properties.map((p, i) => `${p.name} = ${(dataTypes[p.type] || Enum).sqlParameterTransform(i + 2, p.value)}`)}
+			SET ${properties.map((p, i) => `"${p.name}" = ${(dataTypes[p.type] || Enum).sqlParameterTransform(i + 2, p.value)}`)}
 			WHERE id = $1
 		
 		`, [
