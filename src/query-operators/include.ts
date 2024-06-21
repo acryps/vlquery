@@ -170,8 +170,18 @@ class QueryIncludeIndent<TModel extends Entity<TQueryModel> | View<TQueryModel>,
 		for (let child of this.childIndents) {
 			select.push(`'${child.mappedName}', ${child.exportingExtent.name}._`);
 		}
+		
+		// postgres can only take 100 parameters (default)
+		// split parameters after 10 selects to be sure
+		const parts = [];
+		
+		while (select.length) {
+			const part = select.splice(0, 10);
+			
+			parts.push(`json_build_object(${part.join(", ")})`);
+		}
 
-		return `json_build_object(${select.join(", ")})`;
+		return `(${parts.join(' || ')})`;
 	}
 
 	toJoinSQL() {
