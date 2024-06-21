@@ -178,7 +178,7 @@ class QueryIncludeIndent<TModel extends Entity<TQueryModel> | View<TQueryModel>,
 		while (select.length) {
 			const part = select.splice(0, 10);
 			
-			parts.push(`json_build_object(${part.join(", ")})`);
+			parts.push(`jsonb_build_object(${part.join(", ")})`);
 		}
 
 		return `(${parts.join(' || ')})`;
