@@ -1,5 +1,6 @@
 import { QueryProxy } from "./query-proxy";
 import { Queryable } from "./queryable";
+import { ForeignReference, PrimaryReference } from "./reference";
 import { DbSet } from "./set";
 
 export class Entity<TQueryProxy extends QueryProxy> {
@@ -47,5 +48,37 @@ export class Entity<TQueryProxy extends QueryProxy> {
 		delete copy.id;
 
 		return copy as this;
+	}
+	
+	// loads missing referenced data defined in the tree
+	// 
+	// will NOT load references missing on a deeper level
+	// will NOT load fields, only references
+	async backload(tree: any) {
+		const tasks: Promise<void>[] = [];
+		
+		for (let property in tree) {
+			if (property in this) {
+				const reference = this[property];
+				
+				if (reference instanceof PrimaryReference) {
+					if (!reference['$fetched']) {
+						tasks.push(reference.includeTree(tree[property]).toArray().then(data => {
+							reference['$stored'] = data;
+							reference['$fetched'] = true;
+						}));
+					}
+				} else if (reference instanceof ForeignReference) {
+					if (!reference['$fetched']) {
+						tasks.push(reference.sourceSet.includeTree(tree[property]).first(item => item.id == reference.id).then(data => {
+							reference['$stored'] = data;
+							reference['$fetched'] = true;
+						}));
+					}
+				}
+			}
+		}
+		
+		await Promise.all(tasks);
 	}
 }

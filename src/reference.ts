@@ -25,15 +25,18 @@ export class ForeignReference<T extends Entity<QueryProxy> | View<QueryProxy>> {
 
 		this.$$item[this.$column] = value;
 	}
+	
+	get sourceSet() {
+		const source = new this.$relation();
+		return (source as Entity<QueryProxy>).$$meta.set;
+	}
 
 	async fetch?(): Promise<T> {
 		if (this.hasPrefetched) {
 			return this.$stored;
 		}
-
-		const source = new this.$relation();
 		
-		return await (source as Entity<QueryProxy>).$$meta.set.find(this.id) as T;
+		return await this.sourceSet.find(this.id) as T;
 	}
 
 	get hasPrefetched() {
