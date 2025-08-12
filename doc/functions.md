@@ -34,6 +34,11 @@ column.length(): QueryNumber // get the strings length (ABC = 3)
 column.hash(algo): QueryString // hashes the string (requires pgcrypto, algo can be md5, sha1, sha224, sha256, sha384 or sha512 by default)
 ```
 
+## ByteArray / Buffer / Blob Operators
+```
+column.byteLength(): QueryNumber // gets the byte length of the data
+```
+
 ## Chaining
 Functions with a query type return value (eg. `QueryString`, ...) can be chained
 ```

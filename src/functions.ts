@@ -43,6 +43,9 @@ export const queryFunctions = {
 
 	length: new QueryFunction(0, body => `LENGTH(${body})`),
 
+	// bytearray / buffer / blob operators
+	byteLength: new QueryFunction(0, body => `LENGTH(${body})`),
+
 	// string case operators
 	uppercase: new QueryFunction(0, body => `UPPER(${body})`),
 	lowercase: new QueryFunction(0, body => `LOWER(${body})`),
