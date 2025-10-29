@@ -28,7 +28,7 @@ export function createContext() {
 			jsonb: "any",
 			bytea: "Buffer"
 		}
-		
+
 		if (type in types) {
 			return types[type];
 		}
@@ -84,11 +84,11 @@ export function createContext() {
 		}
 
 		for (let row of (await client.query(`
-			SELECT 
-				t.typname as name, 
+			SELECT
+				t.typname as name,
 				e.enumlabel as value
-			FROM pg_type t 
-				JOIN pg_enum e ON t.oid = e.enumtypid  
+			FROM pg_type t
+				JOIN pg_enum e ON t.oid = e.enumtypid
 				JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
 		`)).rows) {
 			if (row.name in enums) {
@@ -103,7 +103,7 @@ export function createContext() {
 		}
 
 		const tables = (await client.query(`
-			SELECT tablename 
+			SELECT tablename
 			FROM pg_tables
 			WHERE schemaname = 'public'
 			ORDER BY tablename
@@ -118,7 +118,7 @@ import { Entity, DbSet, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSO
 		if (config.context.audit) {
 			if (!tables.find(t => convertToModelName(t.tablename) == config.context.audit.entity)) {
 				throw new Error(`Cannot find audit table '${config.context.audit.entity}'. Check the spelling and be sure to use camel-case instead of '_' in vlconfig.json`);
-			} 
+			}
 		}
 
 		for (let enumeration in enums) {
@@ -133,10 +133,10 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 			config.compile.verbose && console.group(table);
 
 			const columns = (await client.query(`
-				SELECT 
+				SELECT
 					column_name,
 					udt_name AS data_type
-				FROM INFORMATION_SCHEMA.COLUMNS 
+				FROM INFORMATION_SCHEMA.COLUMNS
 					WHERE table_name = $1${config.context.active ? ` AND column_name NOT IN ('${config.context.active}')`: ""}
 				ORDER BY column_name
 			`, [
@@ -153,7 +153,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 			}
 
 			const constraints = (await client.query(`
-				SELECT 
+				SELECT
 					constraint_source.conname AS constraint_name,
 					source_table.relname AS table_name,
 					key_column.attname AS column_name,
@@ -161,18 +161,18 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 					target_column.attname AS foreign_column_name
 				FROM
 					pg_constraint AS constraint_source
-					
+
 					JOIN pg_class source_table
 						ON source_table.oid = constraint_source.conrelid
-						
+
 					JOIN pg_attribute key_column
 						ON key_column.attnum = ANY(constraint_source.conkey)
 							AND key_column.attrelid = constraint_source.conrelid
 							AND NOT key_column.attisdropped
-							
+
 					JOIN pg_class target_table
 						ON target_table.oid = constraint_source.confrelid
-						
+
 					JOIN pg_attribute target_column
 						ON target_column.attnum = ANY(constraint_source.confkey)
 							AND target_column.attrelid = constraint_source.confrelid
@@ -197,7 +197,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 
 				if (parts.length != 2) {
 					throw new Error(`Invalid constraint name '${constraint.constraint_name}' from ${constraint.table_name}.${constraint.column_name} to ${constraint.foreign_table_name}.id`);
-				} 
+				}
 
 				if (constraint.table_name == table && parts[0]) {
 					constr += `this.$${convertToModelName(parts[0])} = new ForeignReference<${
@@ -232,7 +232,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 						convertToQueryProxyName(constraint.foreign_table_name)
 					}> { throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime"); }\n\t`;
 				}
-				
+
 				if (constraint.foreign_table_name == table && parts[1]) {
 					constr += `this.${convertToModelName(parts[1])} = new PrimaryReference<${
 						convertToClassName(constraint.table_name)
@@ -258,7 +258,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 				if (column.data_type in enums) {
 					type = convertToClassName(column.data_type);
 				}
-				
+
 				if (!type) {
 					throw new Error(`Unsupported column type '${column.data_type}' in column '${column.column_name}'`);
 				}
@@ -271,7 +271,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 				config.compile.verbose && console.log(column.column_name, column.data_type, type);
 
 				body += `${column.column_name == 'id' ? 'declare ' : ''}${convertToModelName(column.column_name)}: ${type};\n\t`;
-					
+
 				if (column.column_name != "id") {
 					proxyBody += `get ${
 						convertToModelName(column.column_name)
@@ -290,7 +290,7 @@ export class ${convertToQueryProxyName(table)} extends QueryProxy {
 
 export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyName(table)}> {
 	${body.trim()}
-	
+
 	$$meta = {
 		source: ${JSON.stringify(table)},
 		columns: {
@@ -300,7 +300,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 			convertToClassName(table)
 		}, ${
 			convertToQueryProxyName(table)
-		}> { 
+		}> {
 			return new DbSet<${
 				convertToClassName(table)
 			}, ${
@@ -309,16 +309,16 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 				convertToClassName(table)
 			}, null);
 		}${config.context.active ? `,
-		
+
 		active: ${JSON.stringify(config.context.active)}` : ""}
 	};${constr.trim() ? `
-	
+
 	constructor() {
 		super();
-		
+
 		${constr.trim()}
 	}` : ""}${shadowBody ? `
-	
+
 	${shadowBody}` : ""}
 }
 			`;
@@ -347,7 +347,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 			`, [view])).rows;
 
 			context += `
-class ${convertToViewQueryProxyClassName(view)} extends QueryProxy {
+export class ${convertToViewQueryProxyClassName(view)} extends QueryProxy {
 	${columns.filter(column => column.name != 'id').map(column => `get ${
 		convertToModelName(column.name)
 	}(): Partial<${proxyTypeMapping[column.type]}> { throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime"); }`).join('\n\t')}
@@ -360,7 +360,7 @@ export class ${convertToViewClassName(view)} extends View<${convertToViewQueryPr
 			convertToViewClassName(view)
 		}, ${
 			convertToViewQueryProxyClassName(view)
-		}> { 
+		}> {
 			return new ViewSet<${
 				convertToViewClassName(view)
 			}, ${
