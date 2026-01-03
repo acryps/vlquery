@@ -1,10 +1,10 @@
-import { Client } from "pg";
 import * as fs from "fs";
 import * as pathTools from "path";
+import { Connection } from "postgrejs";
 import { config } from "../config";
 
 export function createContext() {
-	const client = new Client(config.context.connection);
+	const client = new Connection(config.context.connection);
 
 	let enums = {};
 
@@ -139,9 +139,11 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 				FROM INFORMATION_SCHEMA.COLUMNS
 					WHERE table_name = $1${config.context.active ? ` AND column_name NOT IN ('${config.context.active}')`: ""}
 				ORDER BY column_name
-			`, [
-				table
-			])).rows;
+			`, {
+				params: [
+					table
+				]
+			})).rows;
 
 			// check if all tracked properties extist in the audit table
 			if (config.context.audit && convertToModelName(table) == config.context.audit.entity) {
@@ -181,7 +183,9 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 					constraint_source.contype = 'f'
 					AND (source_table.relname = $1 OR target_table.relname = $1)
 				ORDER BY constraint_name, table_name, foreign_table_name
-			`, [table])).rows;
+			`, {
+				params: [table]
+			})).rows;
 
 			let constr = '';
 			let body = '';
@@ -344,7 +348,9 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 				SELECT c.column_name AS name, c.udt_name AS type
 				FROM information_schema.tables t LEFT JOIN information_schema.columns c ON t.table_schema = c.table_schema AND t.table_name = c.table_name
 				WHERE table_type = 'VIEW' AND t.table_schema NOT IN ('information_schema', 'pg_catalog') AND t.table_name = $1
-			`, [view])).rows;
+			`, {
+				params: [view]
+			})).rows;
 
 			context += `
 export class ${convertToViewQueryProxyClassName(view)} extends QueryProxy {
@@ -492,7 +498,7 @@ export class db {
 	}
 
 	main().then(async () => {
-		await client.end();
+		await client.close();
 
 		process.exit(0);
 	});

@@ -15,10 +15,12 @@
 	"author": "Levi Hechenberger",
 	"license": "GPL-3.0-only",
 	"dependencies": {
-		"@types/node": "^14.6.2",
 		"esprima": "^4.0.1",
-		"pg": "^8.7.1",
-		"typescript": "^4.0.3"
+		"postgrejs": "^2.22.9"
+	},
+	"devDependencies": {
+		"@types/node": "^25.0.3",
+		"typescript": "^5.9.3"
 	},
 	"repository": {
 		"type": "git",

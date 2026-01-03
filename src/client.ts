@@ -1,4 +1,4 @@
-import { Client, Pool } from "pg";
+import { Pool } from "postgrejs";
 
 export class DbClient {
 	static connectedClient: DbClient;
@@ -10,47 +10,46 @@ export class DbClient {
 
 	stalledRequests: StalledDbRequest[] = [];
 
-	clients: Client[] = [];
-	clientIndex: number = 0;
-
 	quertCount = 0;
 	openQueryCount = 0;
 
 	constructor(private configuration?) {}
 
 	async connect() {
-		this.connection = new Pool(this.configuration);
-
 		// reset open connections
-		for (let client of this.clients) {
-			try {
-				client.release();
-			} catch {}
+		this.connection?.close();
+
+		console.log('connecting to database...');
+
+		this.connection = new Pool({
+			ssl: {
+				rejectUnauthorized: false
+			},
+
+			min: this.configuration?.min ?? 1,
+			max: this.configuration?.max ?? 8
+		});
+
+		this.connection.on('error', error => {
+			console.warn('database connection failed', error);
+
+			this.reconnect();
+		});
+
+		this.connection.on('terminate', () => this.reconnect());
+
+		const probe = await this.connection.acquire();
+
+		if (probe) {
+			probe.close();
 		}
 
-		this.clients = [];
-		this.clientIndex = 0;
-
-		const count = this.configuration.max || 8;
-
-		for (let index = 0; index < count; index++) {
-			console.log(`connecting ${index + 1} / ${count}`);
-
-			const connection = new DbClientConnection();
-			connection.index = index;
-
-			connection.client = await this.connection.connect();
-
-			connection.client.on("error", () => this.reconnect(connection));
-			connection.client.on("end", () => this.reconnect(connection));
-
-			this.clients.push(connection);
-		}
+		console.log('connected to database');
 
 		this.connected = true;
 	}
 
-	reconnect(client: DbClientConnection) {
+	reconnect() {
 		this.connected = false;
 
 		if (DbClient.reconnecting) {
@@ -59,7 +58,7 @@ export class DbClient {
 
 		DbClient.reconnecting = true;
 
-		console.log(`reconnecting (#${client.index + 1})...`);
+		console.log(`reconnecting to database...`);
 
 		this.connect().then(() => {
 			DbClient.reconnecting = false;
@@ -79,12 +78,12 @@ export class DbClient {
 			setTimeout(() => {
 				DbClient.reconnecting = false;
 
-				this.reconnect(client);
+				this.reconnect();
 			}, DbClient.reconnectInterval);
 		});
 	}
 
-	async query(sql: string, params: any[]) {
+	async query(sql: string, params: any[]): Promise<any[]> {
 		if (!this.connected) {
 			const stalledRequest = new StalledDbRequest();
 			stalledRequest.query = sql;
@@ -116,13 +115,10 @@ export class DbClient {
 		}
 
 		try {
-			this.clientIndex++;
-
-			if (this.clientIndex >= this.clients.length) {
-				this.clientIndex = 0;
-			}
-
-			const response = (await this.clients[this.clientIndex].client.query(query, params)).rows;
+			const response = await this.connection.query(query, {
+				params,
+				fetchCount: (2 ** 32) - 1 // it does not fetch all rows if not specified
+			});
 
 			this.openQueryCount--;
 
@@ -130,7 +126,7 @@ export class DbClient {
 				console.log(`query ${queryNumber}: ${+new Date() - start}ms, ${this.openQueryCount} open queries`);
 			}
 
-			return response;
+			return response.rows;
 		} catch (error) {
 			console.warn(`query ${queryNumber} failed`, error, sql);
 			this.openQueryCount--;
@@ -161,10 +157,4 @@ export class StalledDbRequest {
 	data: any[];
 
 	oncomplete(res) {}
-}
-
-export class DbClientConnection {
-	client: Client;
-
-	index = 0;
 }

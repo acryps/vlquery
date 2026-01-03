@@ -84,13 +84,24 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 	}
 
 	async toArray(): Promise<TModel[]> {
-		const data = (await this.toArrayRaw()).map(raw => this.set.constructObject(raw._, this.columnMappings, [], raw, this.blobs));
+		const rows = await this.toArrayRaw();
+		const models = [];
 
-		if (this.mapper) {
-			return data.map((c, i, a) => this.mapper(c, i, a));
+		for (let row of rows) {
+			models.push(this.set.constructObject(
+				row[0],
+				this.columnMappings,
+				[],
+				row.slice(1),
+				this.blobs
+			));
 		}
 
-		return data as TModel[];
+		if (this.mapper) {
+			return models.map((c, i, a) => this.mapper(c, i, a));
+		}
+
+		return models as TModel[];
 	}
 
 	include(selector: (item: TModel) => any): Queryable<TModel, TQueryModel> {

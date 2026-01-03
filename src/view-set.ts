@@ -75,7 +75,7 @@ export class ViewSet<TModel extends View<TQueryProxy>, TQueryProxy extends Query
 		return this.toQuery().page(index, size);
 	}
 
-	constructObject(base: any, columnMappings: QueryColumnMapping<TModel, TQueryProxy>[], path: string[], blobSource: any = {}, blobFields: BlobExtent[] = []) {
+	constructObject(base: any, columnMappings: QueryColumnMapping<TModel, TQueryProxy>[], path: string[], blobSource: any = [], blobFields: BlobExtent[] = []) {
 		const model = new this.modelConstructor();
 		const leaf = [];
 
@@ -102,9 +102,9 @@ export class ViewSet<TModel extends View<TQueryProxy>, TQueryProxy extends Query
 				const type = dataTypes[map.type] || Enum;
 
 				if (type.loadAsBlob) {
-					const blob = blobFields.find(externalField => externalField.column == columnName);
+					const blobIndex = blobFields.findIndex(externalField => externalField.column == columnName);
 
-					model[columnName] = type.fromSQL(blobSource[blob.extent]);
+					model[columnName] = type.fromSQL(blobSource[blobIndex]);
 				} else {
 					model[columnName] = type.fromSQL(base[map.name]);
 				}
