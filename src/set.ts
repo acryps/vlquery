@@ -8,6 +8,7 @@ import { QueryColumnMapping } from "./query-operators/column-map";
 import { dataTypes } from "./data-type";
 import { BaseDataType } from "./data-type/base";
 import { Enum } from "./data-type/enum";
+import { BlobExtent } from "./blob";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	static $audit: {
@@ -17,16 +18,16 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 		createAudit(action: "create" | "update" | "delete", comment: string, entity: Entity<any>, runContext?: any): Promise<Entity<any>>;
 	}
-	
+
 	constructor(
 		public modelConstructor: new () => TModel,
 		public runContext?: RunContext
 	) {}
-	
+
 	get $$meta() {
 		return new this.modelConstructor().$$meta;
 	}
-	
+
 	async create(item: TModel, comment?: string) {
 		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
 			if (DbSet.$audit.commentRequired && !comment) {
@@ -82,11 +83,11 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		const properties = this.getStoredProperties(item);
 
 		await DbClient.query(`
-		
-			UPDATE ${JSON.stringify(item.$$meta.source)} 
+
+			UPDATE ${JSON.stringify(item.$$meta.source)}
 			SET ${properties.map((p, i) => `"${p.name}" = ${(dataTypes[p.type] || Enum).sqlParameterTransform(i + 2, p.value)}`)}
 			WHERE id = $1
-		
+
 		`, [
 			item.id,
 			...properties.map(p => (dataTypes[p.type] || Enum).toSQLParameter(p.value))
@@ -124,20 +125,20 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 		if (item.$$meta.active) {
 			await DbClient.query(`
-			
-				UPDATE ${JSON.stringify(item.$$meta.source)} 
+
+				UPDATE ${JSON.stringify(item.$$meta.source)}
 				SET _active = false
 				WHERE id = $1
-			
+
 			`, [
 				item.id
 			]);
 		} else {
 			await DbClient.query(`
-			
+
 				DELETE FROM ${JSON.stringify(item.$$meta.source)}
 				WHERE id = $1
-			
+
 			`, [
 				item.id
 			]);
@@ -149,13 +150,13 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	}
 
 	private getStoredProperties(item: TModel) {
-		const properties: ({ 
-			key: string, 
-			value: any, 
-			type: string, 
-			name: string 
+		const properties: ({
+			key: string,
+			value: any,
+			type: string,
+			name: string
 		})[] = [];
-		
+
 		for (let key in item) {
 			const col = item.$$meta.columns[key];
 
@@ -228,7 +229,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return this.toQuery().page(index, size);
 	}
 
-	constructObject(raw: any, columnMappings: QueryColumnMapping<TModel, TQueryProxy>[], path: string[]) {
+	constructObject(base: any, columnMappings: QueryColumnMapping<TModel, TQueryProxy>[], path: string[], blobSource: any = {}, blobFields: BlobExtent[] = []) {
 		const model = new this.modelConstructor();
 		const leaf = [];
 
@@ -238,7 +239,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			for (let i = 0; i < path.length; i++) {
 				if (path[i] != mapping.path[i]) {
 					addMapping = false;
-				}	
+				}
 			}
 
 			if (addMapping) {
@@ -248,11 +249,19 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 		const columns = leaf.filter(c => c.path.length == path.length + 1);
 
-		for (let col in model.$$meta.columns) {
-			const map = columns.find(c => c.lastComponent == col);
+		for (let columnName in model.$$meta.columns) {
+			const map = columns.find(c => c.lastComponent == columnName);
 
 			if (map) {
-				model[col] = (dataTypes[map.type] || Enum).fromSQL(raw[map.name]);
+				const type = dataTypes[map.type] || Enum;
+
+				if (type.loadAsBlob) {
+					const externalField = blobFields.find(externalField => externalField.column == columnName);
+
+					model[columnName] = type.fromSQL(blobSource[externalField.extent]);
+				} else {
+					model[columnName] = type.fromSQL(base[map.name]);
+				}
 			}
 		}
 
@@ -263,13 +272,13 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 				const idMapping = leaf.find(m => m.path[path.length] == key.replace("$", "") && m.path[path.length + 1] == "id");
 
 				// check if id is null (empty relation target)
-				if (idMapping && idMapping.name in raw) {
+				if (idMapping && idMapping.name in base) {
 					// construct prefetched item
 					let child;
-					
-					if (raw[idMapping.name]) {
-						child = (new relation.$relation().$$meta.set).constructObject(raw, columnMappings, [
-							...path, 
+
+					if (base[idMapping.name]) {
+						child = (new relation.$relation().$$meta.set).constructObject(base, columnMappings, [
+							...path,
 							key.replace("$", "")
 						]);
 					}
@@ -281,14 +290,14 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 					relation["$stored"] = child;
 				} else {
 					relation["$stored"] = null;
-				} 
+				}
 			}
 
-			if (relation instanceof PrimaryReference && key in raw) {
-				if (key in raw) {
+			if (relation instanceof PrimaryReference && key in base) {
+				if (key in base) {
 					const set = (new relation.$relation()).$$meta.set;
 
-					const items = (raw[key] || []).map(item => set.constructObject(item, columnMappings, [
+					const items = (base[key] || []).map(item => set.constructObject(item, columnMappings, [
 						...path,
 						key
 					]));

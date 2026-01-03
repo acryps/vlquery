@@ -13,6 +13,8 @@ import { QueryInclude } from "./query-operators/include";
 import { QueryColumnMapping } from "./query-operators/column-map";
 import { ViewSet } from "./view-set";
 import { View } from "./view";
+import { dataTypes } from "./data-type";
+import { BlobExtent } from "./blob";
 
 export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> implements Queryable<TModel, TQueryModel> {
 	public limitRows = -1;
@@ -26,10 +28,12 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 	public rootExtent: QueryExtent<TModel, TQueryModel>;
 	public extentIndex = 0;
 	public columnMappings: QueryColumnMapping<TModel, TQueryModel>[] = [];
+	public blobs: BlobExtent[] = [];
+
 	public mapper;
 
 	static defaultPageSize = 100;
-	
+
 	constructor(public set: DbSet<Entity<TQueryModel>, TQueryModel> | ViewSet<View<TQueryModel>, TQueryModel>, preConditions?: CompiledQuery[]) {
 		this.rootExtent = new QueryExtent(this);
 
@@ -39,7 +43,7 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 			}
 		}
 	}
-	
+
 	where(query: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
 		// ensure compiled query
 		if (typeof query == "function") {
@@ -80,7 +84,7 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 	}
 
 	async toArray(): Promise<TModel[]> {
-		const data = (await this.toArrayRaw()).map(raw => this.set.constructObject(raw._, this.columnMappings, []));
+		const data = (await this.toArrayRaw()).map(raw => this.set.constructObject(raw._, this.columnMappings, [], raw, this.blobs));
 
 		if (this.mapper) {
 			return data.map((c, i, a) => this.mapper(c, i, a));
@@ -171,7 +175,9 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 
 			this.includeClause.buildMap();
 
-			select = `${this.includeClause.toSelectSQL()} AS _`;
+			this.blobs = this.includeClause.extractBlobs();
+
+			select = `${this.includeClause.toSelectSQL()} AS _${this.blobs.map(externalField => `, ext0.${externalField.column} AS ${externalField.extent}`).join('')}`;
 		}
 
 		return `SELECT ${select} FROM ${JSON.stringify(this.set.$$meta.source)} AS ${this.rootExtent.name} ${
@@ -180,7 +186,7 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 				...this.includeClause?.rootLeaf.joins || []
 			].map(join => join.toSQL()).join("\n")
 		} ${
-			this.includeClause?.toJoinSQL() || ""
+			this.includeClause?.toJoinSQL() || ""
 		} ${
 			wheres.length ? `WHERE ${wheres.join(" AND ")}` : ""
 		} ${

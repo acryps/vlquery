@@ -7,13 +7,14 @@ import { QueryColumnMapping } from "./query-operators/column-map";
 import { dataTypes } from "./data-type";
 import { Enum } from "./data-type/enum";
 import { View } from "./view";
+import { BlobExtent } from "./blob";
 
 export class ViewSet<TModel extends View<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	constructor(
 		public modelConstructor: new () => TModel,
 		public runContext?: RunContext
 	) {}
-	
+
 	get $$meta() {
 		return new this.modelConstructor().$$meta;
 	}
@@ -74,7 +75,7 @@ export class ViewSet<TModel extends View<TQueryProxy>, TQueryProxy extends Query
 		return this.toQuery().page(index, size);
 	}
 
-	constructObject(raw: any, columnMappings: QueryColumnMapping<TModel, TQueryProxy>[], path: string[]) {
+	constructObject(base: any, columnMappings: QueryColumnMapping<TModel, TQueryProxy>[], path: string[], blobSource: any = {}, blobFields: BlobExtent[] = []) {
 		const model = new this.modelConstructor();
 		const leaf = [];
 
@@ -84,7 +85,7 @@ export class ViewSet<TModel extends View<TQueryProxy>, TQueryProxy extends Query
 			for (let i = 0; i < path.length; i++) {
 				if (path[i] != mapping.path[i]) {
 					addMapping = false;
-				}	
+				}
 			}
 
 			if (addMapping) {
@@ -94,11 +95,19 @@ export class ViewSet<TModel extends View<TQueryProxy>, TQueryProxy extends Query
 
 		const columns = leaf.filter(c => c.path.length == path.length + 1);
 
-		for (let col in model.$$meta.columns) {
-			const map = columns.find(c => c.lastComponent == col);
+		for (let columnName in model.$$meta.columns) {
+			const map = columns.find(c => c.lastComponent == columnName);
 
 			if (map) {
-				model[col] = (dataTypes[map.type] || Enum).fromSQL(raw[map.name]);
+				const type = dataTypes[map.type] || Enum;
+
+				if (type.loadAsBlob) {
+					const blob = blobFields.find(externalField => externalField.column == columnName);
+
+					model[columnName] = type.fromSQL(blobSource[blob.extent]);
+				} else {
+					model[columnName] = type.fromSQL(base[map.name]);
+				}
 			}
 		}
 
@@ -109,13 +118,13 @@ export class ViewSet<TModel extends View<TQueryProxy>, TQueryProxy extends Query
 				const idMapping = leaf.find(m => m.path[path.length] == key.replace("$", "") && m.path[path.length + 1] == "id");
 
 				// check if id is null (empty relation target)
-				if (idMapping && idMapping.name in raw) {
+				if (idMapping && idMapping.name in base) {
 					// construct prefetched item
 					let child;
-					
-					if (raw[idMapping.name]) {
-						child = (new relation.$relation().$$meta.set).constructObject(raw, columnMappings, [
-							...path, 
+
+					if (base[idMapping.name]) {
+						child = (new relation.$relation().$$meta.set).constructObject(base, columnMappings, [
+							...path,
 							key.replace("$", "")
 						]);
 					}
@@ -127,14 +136,14 @@ export class ViewSet<TModel extends View<TQueryProxy>, TQueryProxy extends Query
 					relation["$stored"] = child;
 				} else {
 					relation["$stored"] = null;
-				} 
+				}
 			}
 
-			if (relation instanceof PrimaryReference && key in raw) {
-				if (key in raw) {
+			if (relation instanceof PrimaryReference && key in base) {
+				if (key in base) {
 					const set = (new relation.$relation()).$$meta.set;
 
-					const items = (raw[key] || []).map(item => set.constructObject(item, columnMappings, [
+					const items = (base[key] || []).map(item => set.constructObject(item, columnMappings, [
 						...path,
 						key
 					]));

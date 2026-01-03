@@ -1,23 +1,21 @@
 import { BaseDataType } from "./base";
 
 export class ByteArray implements BaseDataType {
-    static sqlParameterTransform(parameterIndex: number, value: Buffer) {
-        if (!value) {
-            return `$${parameterIndex}`;
-        }
+	static loadAsBlob = true;
 
-        return `DECODE($${parameterIndex}::text, 'hex')`;
+    static sqlParameterTransform(parameterIndex: number, value: Buffer) {
+        return `$${parameterIndex}`;
     }
 
     static toSQLParameter(value: Buffer) {
         if (value) {
-            return value.toString("hex");
+            return value;
         }
     }
 
-    static fromSQL(value: string) {
+    static fromSQL(value: Buffer) {
         if (value) {
-            return Buffer.from(value.substring(2), "hex");
+			return value;
         }
     }
 }

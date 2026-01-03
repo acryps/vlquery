@@ -7,11 +7,14 @@ import { QueryJoin } from "./join";
 import { QueryColumnMapping } from "./column-map";
 import { ViewSet } from "../view-set";
 import { View } from "../view";
+import { dataTypes } from "../data-type";
+import { Enum } from "../data-type/enum";
+import { BlobExtent } from "../blob";
 
 export class QueryInclude<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> {
 	fetchTree: any;
 	rootLeaf: QueryIncludeIndent<TModel, TQueryModel>;
-	
+
 	constructor(
 		public query: Query<TModel, TQueryModel>,
 		selectorOrTree: ((item: TQueryModel) => any) | any
@@ -67,9 +70,11 @@ export class QueryInclude<TModel extends Entity<TQueryModel> | View<TQueryModel>
 		// add id to check for null relations
 		if ("id" in leaf) {
 			leaf.id = true;
-		} 
+		}
 
 		for (let property in leaf) {
+			const column = set.$$meta.columns[property];
+
 			if (set.$$meta.columns[property]) {
 				const col = set.$$meta.columns[property];
 
@@ -77,9 +82,9 @@ export class QueryInclude<TModel extends Entity<TQueryModel> | View<TQueryModel>
 				node.name = col.name;
 				node.extent = extent;
 				node.to = new QueryColumnMapping(this.query, [
-					...path, 
+					...path,
 					property
-				], col.type)
+				], col.type);
 
 				indent.properties.push(node);
 			} else if (proxy[property] && proxy[property] instanceof ForeignReference) {
@@ -99,9 +104,9 @@ export class QueryInclude<TModel extends Entity<TQueryModel> | View<TQueryModel>
 				if (!targetExtent) {
 					// create new join
 					targetExtent = new QueryJoin(
-						this.query, 
-						extent, 
-						meta.source, 
+						this.query,
+						extent,
+						meta.source,
 						proxy.$$meta.columns[reference.$column].name
 					);
 
@@ -138,6 +143,20 @@ export class QueryInclude<TModel extends Entity<TQueryModel> | View<TQueryModel>
 		this.rootLeaf = this.build(this.fetchTree, this.query.set, this.query.rootExtent, []);
 	}
 
+	extractBlobs() {
+		const blobs: BlobExtent[] = [];
+
+		for (let property of this.rootLeaf.properties) {
+			const type = dataTypes[property.to.type] ?? Enum;
+
+			if (type.loadAsBlob) {
+				blobs.push(new BlobExtent(property.name, blobs));
+			}
+		}
+
+		return blobs;
+	}
+
 	toSelectSQL() {
 		return this.rootLeaf.toSelectSQL();
 	}
@@ -164,21 +183,30 @@ class QueryIncludeIndent<TModel extends Entity<TQueryModel> | View<TQueryModel>,
 		let select = [];
 
 		for (let property of this.properties) {
-			select.push(`'${property.to.name}', ${property.extent.name}.${property.name}`);
+			const type = dataTypes[property.to.type] ?? Enum;
+
+			if (!type.loadAsBlob) {
+				select.push(`'${property.to.name}', ${property.extent.name}.${property.name}`);
+			}
 		}
 
 		for (let child of this.childIndents) {
 			select.push(`'${child.mappedName}', ${child.exportingExtent.name}._`);
 		}
-		
+
 		// postgres can only take 100 parameters (default)
 		// split parameters after 10 selects to be sure
 		const parts = [];
-		
+
 		while (select.length) {
 			const part = select.splice(0, 10);
-			
+
 			parts.push(`jsonb_build_object(${part.join(", ")})`);
+		}
+
+		// request is empty if all parameters are externals
+		if (!parts.length) {
+			return '(jsonb_build_object())';
 		}
 
 		return `(${parts.join(' || ')})`;

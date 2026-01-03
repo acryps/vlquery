@@ -4,7 +4,7 @@ export class DbClient {
 	static connectedClient: DbClient;
 	static reconnectInterval = 2000;
 	static reconnecting = false;
-	
+
 	connection: Pool;
 	connected: boolean;
 
@@ -12,6 +12,9 @@ export class DbClient {
 
 	clients: Client[] = [];
 	clientIndex: number = 0;
+
+	quertCount = 0;
+	openQueryCount = 0;
 
 	constructor(private configuration?) {}
 
@@ -31,13 +34,13 @@ export class DbClient {
 		const count = this.configuration.max || 8;
 
 		for (let index = 0; index < count; index++) {
-			console.log(`connecting ${index + 1} / ${count}`);
+			console.log(`connecting ${index + 1} / ${count}`);
 
 			const connection = new DbClientConnection();
 			connection.index = index;
 
 			connection.client = await this.connection.connect();
-			
+
 			connection.client.on("error", () => this.reconnect(connection));
 			connection.client.on("end", () => this.reconnect(connection));
 
@@ -60,7 +63,7 @@ export class DbClient {
 
 		this.connect().then(() => {
 			DbClient.reconnecting = false;
-			
+
 			console.log(`reconnected, flushing ${this.stalledRequests.length} stalled requests`);
 
 			while (this.stalledRequests.length) {
@@ -98,8 +101,12 @@ export class DbClient {
 		let data = [];
 		let query = sql;
 
+		const queryNumber = ++this.quertCount;
+		this.openQueryCount++;
+		const start = +new Date();
+
 		if (process.env.VLQUERY_LOG_SQL) {
-			console.log(query);
+			console.log(`query ${queryNumber}: ${query}`);
 		}
 
 		for (let name of names) {
@@ -115,9 +122,18 @@ export class DbClient {
 				this.clientIndex = 0;
 			}
 
-			return (await this.clients[this.clientIndex].client.query(query, params)).rows;
+			const response = (await this.clients[this.clientIndex].client.query(query, params)).rows;
+
+			this.openQueryCount--;
+
+			if (process.env.VLQUERY_LOG_SQL) {
+				console.log(`query ${queryNumber}: ${+new Date() - start}ms, ${this.openQueryCount} open queries`);
+			}
+
+			return response;
 		} catch (error) {
-			console.warn("query failed", error);
+			console.warn(`query ${queryNumber} failed`, error, sql);
+			this.openQueryCount--;
 
 			if (this.connected) {
 				throw error;
