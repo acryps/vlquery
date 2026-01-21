@@ -13,7 +13,6 @@ import { QueryInclude } from "./query-operators/include";
 import { QueryColumnMapping } from "./query-operators/column-map";
 import { ViewSet } from "./view-set";
 import { View } from "./view";
-import { dataTypes } from "./data-type";
 import { BlobExtent } from "./blob";
 
 export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> implements Queryable<TModel, TQueryModel> {

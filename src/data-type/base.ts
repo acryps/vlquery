@@ -1,15 +1,17 @@
+import { StoredProperty } from "../stored-property";
+
 export class BaseDataType {
 	static loadAsBlob = false;
 
-    static sqlParameterTransform(parameterIndex: number, value: any) {
-        return `$${parameterIndex}`;
-    }
+	static sqlParameterTransform(parameterIndex: number, parameter: StoredProperty) {
+		return `$${parameterIndex}`;
+	}
 
-    static toSQLParameter(value: any) {
-        return value;
-    }
+	static toSQLParameter(parameter: StoredProperty) {
+		return parameter.value;
+	}
 
-    static fromSQL(value: any) {
-        return value;
-    }
+	static fromSQL(value: any) {
+		return value;
+	}
 }

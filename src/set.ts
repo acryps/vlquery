@@ -5,10 +5,11 @@ import { QueryProxy } from "./query-proxy";
 import { Query } from "./query";
 import { ForeignReference, PrimaryReference, RunContext } from ".";
 import { QueryColumnMapping } from "./query-operators/column-map";
-import { dataTypes } from "./data-type";
 import { BaseDataType } from "./data-type/base";
 import { Enum } from "./data-type/enum";
 import { BlobExtent } from "./blob";
+import { findDataType } from "./data-type";
+import { StoredProperty } from "./stored-property";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	static $audit: {
@@ -50,11 +51,11 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			});
 		}
 
-		const id = (await DbClient.query(`INSERT INTO ${JSON.stringify(item.$$meta.source)} ( ${
+		const id = (await DbClient.query(`INSERT INTO ${JSON.stringify(item.$$meta.source)} (${
 			["id", ...properties.map(p => `"${p.name}"`)]
-		} ) VALUES ( ${
-			["DEFAULT", ...properties.map((p, i) => (dataTypes[p.type] || Enum).sqlParameterTransform(i + 1, p.value))]
-		} ) RETURNING id`, properties.map(p => (dataTypes[p.type] || Enum).toSQLParameter(p.value))))[0].id;
+		}) VALUES (${
+			["DEFAULT", ...properties.map((parameter, index) => findDataType(parameter.type).sqlParameterTransform(index + 1, parameter))]
+		}) RETURNING id`, properties.map(parameter => findDataType(parameter.type).toSQLParameter(parameter))))[0].id;
 
 		item.id = id;
 
@@ -82,15 +83,11 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 		const properties = this.getStoredProperties(item);
 
-		await DbClient.query(`
-
-			UPDATE ${JSON.stringify(item.$$meta.source)}
-			SET ${properties.map((p, i) => `"${p.name}" = ${(dataTypes[p.type] || Enum).sqlParameterTransform(i + 2, p.value)}`)}
-			WHERE id = $1
-
-		`, [
+		await DbClient.query(`UPDATE ${JSON.stringify(item.$$meta.source)} SET ${properties.map(
+			(parameter, index) => `"${parameter.name}" = ${findDataType(parameter.type).sqlParameterTransform(index + 2, parameter)}`
+		)} WHERE id = $1`, [
 			item.id,
-			...properties.map(p => (dataTypes[p.type] || Enum).toSQLParameter(p.value))
+			...properties.map(parameter => findDataType(parameter.type).toSQLParameter(parameter))
 		]);
 
 		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
@@ -150,22 +147,17 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	}
 
 	private getStoredProperties(item: TModel) {
-		const properties: ({
-			key: string,
-			value: any,
-			type: string,
-			name: string
-		})[] = [];
+		const properties: StoredProperty[] = [];
 
 		for (let key in item) {
-			const col = item.$$meta.columns[key];
+			const column = item.$$meta.columns[key];
 
-			if (col) {
+			if (column) {
 				properties.push({
 					key,
 					value: item[key],
-					type: col.type,
-					name: col.name
+					type: column.type,
+					name: column.name
 				});
 			}
 		}
@@ -173,7 +165,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 		return properties;
 	}
 
-	async find(id: string | number) {
+	async find(id: string | number) {
 		return await this.first(item => item.id == id);
 	}
 
@@ -253,7 +245,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			const map = columns.find(c => c.lastComponent == columnName);
 
 			if (map) {
-				const type = dataTypes[map.type] || Enum;
+				const type = findDataType(map.type);
 
 				if (type.loadAsBlob) {
 					const blobIndex = blobFields.findIndex(externalField => externalField.column == columnName);

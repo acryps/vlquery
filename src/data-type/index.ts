@@ -1,13 +1,13 @@
 import { BaseDataType } from "./base";
 import { ByteArray } from "./byte-array";
-import { DateType } from "./date";
+import { Enum } from "./enum";
 
 export * from "./byte-array";
 
-export const dataTypes: { [name: string]: typeof BaseDataType } = {
-    bytea: ByteArray,
+const dataTypes: { [name: string]: typeof BaseDataType } = {
+	bytea: ByteArray,
 
-    text: BaseDataType,
+	text: BaseDataType,
 	int4: BaseDataType,
 	integer: BaseDataType,
 	float: BaseDataType,
@@ -16,10 +16,12 @@ export const dataTypes: { [name: string]: typeof BaseDataType } = {
 	bool: BaseDataType,
 	boolean: BaseDataType,
 	uuid: BaseDataType,
-	timestamp: DateType,
-	timestamptz: DateType,
+	timestamp: BaseDataType,
+	timestamptz: BaseDataType,
 	time: BaseDataType,
-    date: DateType,
-    json: BaseDataType,
-    jsonb: BaseDataType
+	date: BaseDataType,
+	json: BaseDataType,
+	jsonb: BaseDataType
 };
+
+export const findDataType = (type: string) => dataTypes[type] ?? Enum;

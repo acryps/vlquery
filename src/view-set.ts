@@ -4,10 +4,10 @@ import { QueryProxy } from "./query-proxy";
 import { Query } from "./query";
 import { ForeignReference, PrimaryReference, RunContext } from ".";
 import { QueryColumnMapping } from "./query-operators/column-map";
-import { dataTypes } from "./data-type";
 import { Enum } from "./data-type/enum";
 import { View } from "./view";
 import { BlobExtent } from "./blob";
+import { findDataType } from "./data-type";
 
 export class ViewSet<TModel extends View<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	constructor(
@@ -99,7 +99,7 @@ export class ViewSet<TModel extends View<TQueryProxy>, TQueryProxy extends Query
 			const map = columns.find(c => c.lastComponent == columnName);
 
 			if (map) {
-				const type = dataTypes[map.type] || Enum;
+				const type = findDataType(map.type);
 
 				if (type.loadAsBlob) {
 					const blobIndex = blobFields.findIndex(externalField => externalField.column == columnName);

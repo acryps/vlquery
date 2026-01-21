@@ -7,9 +7,9 @@ import { QueryJoin } from "./join";
 import { QueryColumnMapping } from "./column-map";
 import { ViewSet } from "../view-set";
 import { View } from "../view";
-import { dataTypes } from "../data-type";
 import { Enum } from "../data-type/enum";
 import { BlobExtent } from "../blob";
+import { findDataType } from "../data-type";
 
 export class QueryInclude<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> {
 	fetchTree: any;
@@ -147,7 +147,7 @@ export class QueryInclude<TModel extends Entity<TQueryModel> | View<TQueryModel>
 		const blobs: BlobExtent[] = [];
 
 		for (let property of this.rootLeaf.properties) {
-			const type = dataTypes[property.to.type] ?? Enum;
+			const type = findDataType(property.to.type);
 
 			if (type.loadAsBlob) {
 				blobs.push(new BlobExtent(property.name, blobs));
@@ -183,7 +183,7 @@ class QueryIncludeIndent<TModel extends Entity<TQueryModel> | View<TQueryModel>,
 		let select = [];
 
 		for (let property of this.properties) {
-			const type = dataTypes[property.to.type] ?? Enum;
+			const type = findDataType(property.to.type);
 
 			if (!type.loadAsBlob) {
 				select.push(`'${property.to.name}', ${property.extent.name}.${property.name}`);

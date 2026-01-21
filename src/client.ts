@@ -123,7 +123,7 @@ export class DbClient {
 			this.openQueryCount--;
 
 			if (process.env.VLQUERY_LOG_SQL) {
-				console.log(`query ${queryNumber}: ${+new Date() - start}ms, ${this.openQueryCount} open queries`);
+				console.log(`query ${queryNumber}: ${+new Date() - start}ms, ${response.rows.length} rows returned, ${this.openQueryCount} open queries`);
 			}
 
 			return response.rows;
