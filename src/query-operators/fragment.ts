@@ -83,17 +83,15 @@ export class QueryFragment<TModel extends Entity<TQueryModel> | View<TQueryModel
 		}
 
 		if (tree.call) {
-
-			
 			this.call = {
-                calls: (tree.call.stack.filter(e => typeof e != "string") as any).map(item => ({
-                    to: queryFunctions[item.name],
-                    parameters: item.parameters.map(p => new QueryFragment(query, p))
-                })),
-                source: new QueryFragment(query, {
-                    path: tree.call.stack.filter(e => typeof e == "string") as string[]
-                })
-            };
+				calls: (tree.call.stack.filter(e => typeof e != "string") as any).map(item => ({
+					to: queryFunctions[item.name],
+					parameters: item.parameters.map(p => new QueryFragment(query, p))
+				})),
+				source: new QueryFragment(query, {
+					path: tree.call.stack.filter(e => typeof e == "string") as string[]
+				})
+			};
 		}
 
 		if (tree.path) {
