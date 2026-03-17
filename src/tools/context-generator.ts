@@ -90,7 +90,7 @@ export function createContext() {
 			FROM pg_type t
 				JOIN pg_enum e ON t.oid = e.enumtypid
 				JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-		`)).rows) {
+		`, { objectRows: true })).rows) {
 			if (row.name in enums) {
 				enums[row.name].push(row.value);
 			} else {
@@ -107,7 +107,7 @@ export function createContext() {
 			FROM pg_tables
 			WHERE schemaname = 'public'
 			ORDER BY tablename
-		`)).rows;
+		`, { objectRows: true })).rows;
 
 		let context = `
 import { Entity, DbSet, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSON, QueryTimeStamp, QueryNumber, QueryTime, QueryDate, QueryBoolean, QueryBuffer, QueryEnum, ForeignReference, PrimaryReference, View, ViewSet } from 'vlquery';
@@ -142,7 +142,8 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 			`, {
 				params: [
 					table
-				]
+				],
+				objectRows: true
 			})).rows;
 
 			// check if all tracked properties extist in the audit table
@@ -184,7 +185,8 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 					AND (source_table.relname = $1 OR target_table.relname = $1)
 				ORDER BY constraint_name, table_name, foreign_table_name
 			`, {
-				params: [table]
+				params: [table],
+				objectRows: true
 			})).rows;
 
 			let constr = '';
@@ -339,7 +341,7 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 			SELECT viewname AS name
 			FROM pg_views
 			WHERE schemaname = 'public'
-		`)).rows;
+		`, { objectRows: true })).rows;
 
 		const viewSets = [];
 
@@ -349,7 +351,8 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 				FROM information_schema.tables t LEFT JOIN information_schema.columns c ON t.table_schema = c.table_schema AND t.table_name = c.table_name
 				WHERE table_type = 'VIEW' AND t.table_schema NOT IN ('information_schema', 'pg_catalog') AND t.table_name = $1
 			`, {
-				params: [view]
+				params: [view],
+				objectRows: true
 			})).rows;
 
 			context += `
