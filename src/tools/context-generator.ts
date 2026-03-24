@@ -12,6 +12,7 @@ export function createContext() {
 		const types = {
 			text: "string",
 			int4: "number",
+			int8: "number",
 			integer: "number",
 			bool: "boolean",
 			boolean: "boolean",
@@ -43,9 +44,11 @@ export function createContext() {
 	const proxyTypeMapping = {
 		text: "QueryString",
 		int4: "QueryNumber",
+		int8: "QueryNumber",
 		integer: "QueryNumber",
 		float: "QueryNumber",
 		float4: "QueryNumber",
+		float8: "QueryNumber",
 		real: "QueryNumber",
 		bool: "QueryBoolean",
 		boolean: "QueryBoolean",
