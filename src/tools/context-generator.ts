@@ -115,14 +115,6 @@ export function createContext() {
 		let context = `
 import { Entity, DbSet, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSON, QueryTimeStamp, QueryNumber, QueryTime, QueryDate, QueryBoolean, QueryBuffer, QueryEnum, ForeignReference, PrimaryReference, View, ViewSet } from 'vlquery';
 		`.trim() + "\n";
-
-		let graph = [
-			'digraph DatabaseSchema {',
-			`graph [ rankdir=LR, splines=polyline, nodesep=2 ];`,
-			`node [ shape=record ];`,
-			`edge [ arrowsize=0.8 ];`
-		];
-
 		let sets = [];
 
 		// check if audit table exists
@@ -261,22 +253,12 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 
 					body += `${convertToModelName(parts[1])}: PrimaryReference<${convertToClassName(constraint.table_name)}, ${convertToQueryProxyName(constraint.table_name)}>;\n\t\t`;
 				}
-
-				graph.push(`${constraint.table_name}:${constraint.column_name} -> ${constraint.foreign_table_name} [${[
-					`taillabel=${JSON.stringify(parts[0] ?? '')}`,
-					`headlabel=${JSON.stringify(parts[0] ?? '')}`,
-					'labeldistance=1.5',
-					'labelangle=25',
-					'arrowhead=normal'
-				].join(',')}]`);
 			}
 
 			config.compile.verbose && console.groupEnd();
 			config.compile.verbose && console.group("columns");
 
 			const columnMappings = {};
-
-			const graphColums = [];
 
 			for (let column of columns) {
 				let type = getTypeMapping(column.data_type);
@@ -299,8 +281,6 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 
 				body += `${column.column_name == 'id' ? 'declare ' : ''}${convertToModelName(column.column_name)}: ${type};\n\t`;
 
-				graphColums.push(`<${column.column_name}> ${convertToModelName(column.column_name)} : ${type}`);
-
 				if (column.column_name != "id") {
 					proxyBody += `get ${
 						convertToModelName(column.column_name)
@@ -309,8 +289,6 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 					} { throw new Error("Invalid use of QueryModels. QueryModels cannot be used during runtime"); }\n\t`;
 				}
 			}
-
-			graph.push(`${table} [ label=${JSON.stringify(`{${convertToClassName(table)}|{${graphColums.join('|')}}}`)} ]`);
 
 			config.compile.verbose && console.groupEnd();
 
@@ -523,12 +501,6 @@ export class db {
 		}
 
 		fs.writeFileSync(pathTools.join(config.root, config.context.outFile), context);
-
-		graph.push('}');
-
-		if (config.context.graphFile) {
-			fs.writeFileSync(pathTools.join(config.root, config.context.graphFile), graph.join('\n'));
-		}
 	}
 
 	main().then(async () => {
