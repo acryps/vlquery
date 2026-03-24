@@ -15,6 +15,7 @@
 	"author": "Levi Hechenberger",
 	"license": "GPL-3.0-only",
 	"dependencies": {
+		"elkjs": "^0.11.1",
 		"esprima": "^4.0.1",
 		"postgrejs": "^2.22.9"
 	},
