@@ -116,18 +116,12 @@ export function createContext() {
 import { Entity, DbSet, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSON, QueryTimeStamp, QueryNumber, QueryTime, QueryDate, QueryBoolean, QueryBuffer, QueryEnum, ForeignReference, PrimaryReference, View, ViewSet } from 'vlquery';
 		`.trim() + "\n";
 
-		const graph = [
+		let graph = [
 			'digraph DatabaseSchema {',
-			'\trankdir=LR',
-			'\tcompound=true',
-			'',
-			`\tgraph [ nodesep=0.5, ranksep=0.8, pad=0.2 ];`,
-			`\tnode [ shape=plain ];`,
-			`\tedge [ arrowsize=0.8 ];`,
-			''
+			`graph [ rankdir=LR, splines=polyline, nodesep=2 ];`,
+			`node [ shape=record ];`,
+			`edge [ arrowsize=0.8 ];`
 		];
-
-		const graphRanks = [];
 
 		let sets = [];
 
@@ -268,24 +262,13 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 					body += `${convertToModelName(parts[1])}: PrimaryReference<${convertToClassName(constraint.table_name)}, ${convertToQueryProxyName(constraint.table_name)}>;\n\t\t`;
 				}
 
-				if (constraint.table_name == table) {
-					const relationName = [constraint.table_name, constraint.column_name, constraint.foreign_table_name].join('_');
-					const sourceNode = `${relationName}_source`;
-					const targetNode = `${relationName}_target`;
-
-					graph.push(`\t${sourceNode} [ shape=oval, label=${JSON.stringify(parts[0] ?? '')} ]`);
-					graph.push(`\t${targetNode} [ shape=oval, label=${JSON.stringify(parts[1] ?? '')} ]`);
-					graph.push(`\t${sourceNode} -> ${targetNode}`);
-
-					graph.push(`\t${constraint.table_name}_${constraint.column_name} -> ${sourceNode} [ arrowhead=none ]`);
-					graphRanks.push(`\t{ rank=same; ${constraint.table_name}_${constraint.column_name}; ${sourceNode} }`);
-
-					graph.push(`\t${targetNode} -> ${constraint.foreign_table_name}_${constraint.foreign_column_name} [ lhead=cluster_${constraint.foreign_table_name} ]`);
-					// graphRanks.push(`\t{ rank=same; cluster_${constraint.foreign_table_name}; ${targetNode} }`);
-
-
-					graph.push('');
-				}
+				graph.push(`${constraint.table_name}:${constraint.column_name} -> ${constraint.foreign_table_name} [${[
+					`taillabel=${JSON.stringify(parts[0] ?? '')}`,
+					`headlabel=${JSON.stringify(parts[0] ?? '')}`,
+					'labeldistance=1.5',
+					'labelangle=25',
+					'arrowhead=normal'
+				].join(',')}]`);
 			}
 
 			config.compile.verbose && console.groupEnd();
@@ -316,9 +299,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 
 				body += `${column.column_name == 'id' ? 'declare ' : ''}${convertToModelName(column.column_name)}: ${type};\n\t`;
 
-				graphColums.push(
-					`\t\t${table}_${column.column_name} [ label=${JSON.stringify(`${convertToModelName(column.column_name)}: ${type}`)} ]`,
-				);
+				graphColums.push(`<${column.column_name}> ${convertToModelName(column.column_name)} : ${type}`);
 
 				if (column.column_name != "id") {
 					proxyBody += `get ${
@@ -329,13 +310,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 				}
 			}
 
-			graph.push(
-				`\tsubgraph cluster_${table} {`,
-				`\t\tlabel=${JSON.stringify(convertToClassName(table))}`,
-				...graphColums,
-				'\t}',
-				''
-			);
+			graph.push(`${table} [ label=${JSON.stringify(`{${convertToClassName(table)}|{${graphColums.join('|')}}}`)} ]`);
 
 			config.compile.verbose && console.groupEnd();
 
@@ -549,7 +524,6 @@ export class db {
 
 		fs.writeFileSync(pathTools.join(config.root, config.context.outFile), context);
 
-		graph.push(...graphRanks);
 		graph.push('}');
 
 		if (config.context.graphFile) {
