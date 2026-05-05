@@ -1,5 +1,6 @@
 import { BaseDataType } from "./base";
 import { ByteArray } from "./byte-array";
+import { DateDataType } from "./date";
 import { Enum } from "./enum";
 
 export * from "./byte-array";
@@ -16,10 +17,10 @@ const dataTypes: { [name: string]: typeof BaseDataType } = {
 	bool: BaseDataType,
 	boolean: BaseDataType,
 	uuid: BaseDataType,
-	timestamp: BaseDataType,
-	timestamptz: BaseDataType,
-	time: BaseDataType,
-	date: BaseDataType,
+	timestamp: DateDataType,
+	timestamptz: DateDataType,
+	time: DateDataType,
+	date: DateDataType,
 	json: BaseDataType,
 	jsonb: BaseDataType
 };
