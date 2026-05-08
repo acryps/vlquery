@@ -118,7 +118,7 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 	count(): Promise<number> {
 		this.onlyCount = true;
 
-		return this.toArrayRaw().then(raw => +raw[0].count);
+		return this.toArrayRaw().then(raw => +raw[0][0]);
 	}
 
 	orderByAscending(sorter: (item: TQueryModel) => any): Queryable<TModel, TQueryModel> {
