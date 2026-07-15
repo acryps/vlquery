@@ -55,7 +55,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 			["id", ...properties.map(p => `"${p.name}"`)]
 		}) VALUES (${
 			["DEFAULT", ...properties.map((parameter, index) => findDataType(parameter.type).sqlParameterTransform(index + 1, parameter))]
-		}) RETURNING id`, properties.map(parameter => findDataType(parameter.type).toSQLParameter(parameter))))[0].id;
+			}) RETURNING id`, properties.map(parameter => findDataType(parameter.type).toSQLParameter(parameter))))[0][0];
 
 		item.id = id;
 
