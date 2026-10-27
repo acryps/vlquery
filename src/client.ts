@@ -22,6 +22,8 @@ export class DbClient {
 		console.log('connecting to database...');
 
 		this.connection = new Pool({
+			...this.configuration,
+
 			ssl: {
 				rejectUnauthorized: false
 			},
