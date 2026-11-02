@@ -1,11 +1,10 @@
 import { Pool } from "postgrejs";
 
 export class DbClient {
-	static connectedClient: DbClient;
 	static reconnectInterval = 2000;
-	static reconnecting = false;
 
 	connection: Pool;
+	reconnecting = false;
 	connected: boolean;
 
 	stalledRequests: StalledDbRequest[] = [];
@@ -22,6 +21,7 @@ export class DbClient {
 		console.log('connecting to database...');
 
 		this.connection = new Pool({
+			// host, port, user, password, database, ... (falls back to the PG* environment variables)
 			...this.configuration,
 
 			ssl: {
@@ -54,16 +54,16 @@ export class DbClient {
 	reconnect() {
 		this.connected = false;
 
-		if (DbClient.reconnecting) {
+		if (this.reconnecting) {
 			return;
 		}
 
-		DbClient.reconnecting = true;
+		this.reconnecting = true;
 
 		console.log(`reconnecting to database...`);
 
 		this.connect().then(() => {
-			DbClient.reconnecting = false;
+			this.reconnecting = false;
 
 			console.log(`reconnected, flushing ${this.stalledRequests.length} stalled requests`);
 
@@ -78,7 +78,7 @@ export class DbClient {
 			console.warn("could not reconnect", error);
 
 			setTimeout(() => {
-				DbClient.reconnecting = false;
+				this.reconnecting = false;
 
 				this.reconnect();
 			}, DbClient.reconnectInterval);
@@ -149,9 +149,6 @@ export class DbClient {
 		}
 	}
 
-	static async query(sql: string, params: any[]) {
-		return this.connectedClient.query(sql, params);
-	}
 }
 
 export class StalledDbRequest {

@@ -2,7 +2,6 @@ import { DbSet } from "./set";
 import { Queryable } from "./queryable";
 import { Entity } from "./entity";
 import { QueryProxy } from "./query-proxy";
-import { DbClient } from "./client";
 import { QueryJoin } from "./query-operators/join";
 import { QueryFragment } from "./query-operators/fragment";
 import { QueryExtent } from "./query-operators/extent";
@@ -79,7 +78,7 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 	}
 
 	private async toArrayRaw(): Promise<any[]> {
-		return await DbClient.query(this.toSQL(), this.parameters.map(p => p.value));
+		return await this.set.query(this.toSQL(), this.parameters.map(p => p.value));
 	}
 
 	async toArray(): Promise<TModel[]> {

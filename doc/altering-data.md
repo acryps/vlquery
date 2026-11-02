@@ -10,8 +10,12 @@ const book = new Book();
 book.title = "My First Book!";
 book.author = author;
 
-await book.create();
+await db.book.create(book);
 </pre>
+
+A new entity has no database context yet, so it has to be created through a set.
+Calling `book.create()` on a new entity throws a `DatabaseContextError`, unless you have attached it to a set with `db.book.attach(book)`.
+Read more in [Database context](database-context.md).
 
 Alternatively to using `.author` you could do this:
 
@@ -22,6 +26,8 @@ book.authorId = "&lt;uuid&gt;";
 vlquery will add the new id of your record to it, so after calling create, you'll be able to use the new id!
 
 ## Updating existing records
+Records loaded from a set remember their database context, so `.update()` and `.delete()` write to the database they came from.
+
 Whenever your data need some refreshing, do this:
 <pre>
 const book = await db.book.find("&lt;uuid&gt;");
@@ -41,7 +47,7 @@ await book.delete();
 If you are using an active column, this will only deactivate the row!
 
 ## Duplicating a record
-Records can be duplicated by using the `createDuplicate` method on an entity
+Records can be duplicated by using the `createDuplicate` method on an entity. The copy keeps the database context of the original
 <pre>
 const book = await db.book.find("&lt;uuid&gt;");
 

@@ -62,18 +62,20 @@ Enable the `RunContext` by setting the `runContext` configuration in `vlconfig.j
 }
 </pre>
 
-This will replace the `db`-class in the generated database context with a `DbContext`-class.
-The `DbContext`-class has to be initiated with a `RunContext`, which will be passed to the `DbSet`s
+This adds a `RunContext` parameter to the generated `DbContext`-class, which will be passed to the `DbSet`s
 ```
 class RequestContext extends RunContext {
 	currentUser: Person;
 }
 
 const context = new RequestContext();
-const db = new DbContext(context);
+const db = new DbContext(context, client);
 
 await db.person.first("<uuid>");
 ```
+
+Create a new `DbContext` for every request, so the audit always tracks the right user.
+An entity is bound to the `DbContext` (client and run context) it has been loaded from or created in, see [Database context](database-context.md).
 
 This will allow you to add custom properties to the tracked columns in the audit:
 <pre>
@@ -91,13 +93,16 @@ This will allow you to add custom properties to the tracked columns in the audit
 </pre>
 
 This will grab `runContext.currentUser.username` from the context when an audit should be created.
-**You'll need to replace all database-calls in your entities with the calls in their sets!**
 
 ```
-book.update("Updated books information") // this will fail because we do not have a reference to the run context
+const book = await db.book.find("<uuid>");
+book.update("Updated books information") // tracked with the run context of 'db', since the book has been loaded from it
 
-db.book.update(book, "Updated books information") // this will work because the run context is referenced in the 'book' DbSet
+const copy = new Book();
+await db.book.create(copy, "Created book") // new entities have to be created through the set
 ```
+
+The audit entry is written into the same database as the audited entity.
 
 All values in the tracked property can be promises and will be resolved.
 The audit-tracking will fail if any value in the projects path is null!

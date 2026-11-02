@@ -113,7 +113,7 @@ export function createContext() {
 		`, { objectRows: true })).rows;
 
 		let context = `
-import { Entity, DbSet, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSON, QueryTimeStamp, QueryNumber, QueryTime, QueryDate, QueryBoolean, QueryBuffer, QueryEnum, ForeignReference, PrimaryReference, View, ViewSet } from 'vlquery';
+import { Entity, DbSet, DbClient, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSON, QueryTimeStamp, QueryNumber, QueryTime, QueryDate, QueryBoolean, QueryBuffer, QueryEnum, ForeignReference, PrimaryReference, View, ViewSet } from 'vlquery';
 		`.trim() + "\n";
 		let sets = [];
 
@@ -333,8 +333,9 @@ export class ${convertToClassName(table)} extends Entity<${convertToQueryProxyNa
 			`;
 
 			sets.push({
-				declaration: `${config.context.runContext ? "" : "static "}${convertToModelName(table)}: DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>`,
-				initialization: `${config.context.runContext ? `this.${convertToModelName(table)}` : ""} = new DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>(${convertToClassName(table)}${config.context.runContext ? ", this.runContext" : ""});`
+				name: convertToModelName(table),
+				type: `DbSet<${convertToClassName(table)}, ${convertToQueryProxyName(table)}>`,
+				model: convertToClassName(table)
 			});
 
 			config.compile.verbose && console.groupEnd();
@@ -391,7 +392,11 @@ export class ${convertToViewClassName(view)} extends View<${convertToViewQueryPr
 }
 			`;
 
-			viewSets.push(`${convertToModelName(view)}: new ViewSet<${convertToViewClassName(view)}, ${convertToViewQueryProxyClassName(view)}>(${convertToViewClassName(view)})`);
+			viewSets.push({
+				name: convertToModelName(view),
+				type: `ViewSet<${convertToViewClassName(view)}, ${convertToViewQueryProxyClassName(view)}>`,
+				model: convertToViewClassName(view)
+			});
 		}
 
 		if (config.context.audit) {
@@ -445,13 +450,21 @@ DbSet.$audit = {
 			`;
 		}
 
-		if (config.context.runContext) {
-			context += `\n
+		// sets bound to a client (and run context), every DbContext instance can point to a different database
+		context += `\n
 export class DbContext {
-	${sets.map(set => `${set.declaration};`).join("\n\t")}
+	${sets.map(set => `${set.name}: ${set.type};`).join("\n\t")}${viewSets.length ? `
 
-	constructor(private runContext: RunContext) {
-		${sets.map(set => set.initialization).join("\n\t\t")}
+	views: {
+		${viewSets.map(set => `${set.name}: ${set.type};`).join("\n\t\t")}
+	};` : ''}
+
+	constructor(${config.context.runContext ? "public runContext: RunContext, " : ""}public client: DbClient) {
+		${sets.map(set => `this.${set.name} = new ${set.type}(${set.model}, ${config.context.runContext ? "runContext" : "null"}, client);`).join("\n\t\t")}${viewSets.length ? `
+
+		this.views = {
+			${viewSets.map(set => `${set.name}: new ${set.type}(${set.model}, ${config.context.runContext ? "runContext" : "null"}, client)`).join(",\n\t\t\t")}
+		};` : ''}
 	}
 
 	findSet(modelType) {
@@ -463,31 +476,7 @@ export class DbContext {
 			}
 		}
 	}
-
-	${viewSets.length ? `views = {
-		${viewSets.join(',\n\t\t')}
-	}` : ''}
 };`;
-		} else {
-			context += `\n
-export class db {
-	${sets.map(set => `${set.declaration}${set.initialization}`).join("\n\t")}
-
-	${viewSets.length ? `views = {
-		${viewSets.join(',\n\t\t')}
-	}` : ''}
-
-	static findSet(modelType) {
-		for (let key in this) {
-			if (this[key] instanceof DbSet) {
-				if ((this[key] as any).modelConstructor == modelType) {
-					return this[key];
-				}
-			}
-		}
-	}
-};`;
-		}
 
 		let missingPaths = [];
 		let path = pathTools.join(config.root, config.context.outFile);

@@ -1,4 +1,5 @@
 export * from "./client";
+export * from "./database-context-error";
 export * from "./entity";
 export * from "./query";
 export * from "./query-proxy";

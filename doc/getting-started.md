@@ -29,16 +29,18 @@ npx vlquery create-context
 The context should be ready now. If you are using version control, commit it! 
 Use this small example program to get started
 <pre>
-import { db } from "./context";
+import { DbContext } from "./context";
 import { DbClient } from "vlquery";
 
-DbClient.connectedClient = new DbClient({
+const client = new DbClient({
 	user: "postgres",
 	password: ..., 
 	database: "my_project"
 });
 
-DbClient.connectedClient.connect().then(async () => {
+const db = new DbContext(client);
+
+client.connect().then(async () => {
 	const jonny = await db.person.first(item => item.firstname == "Jonny");
 
 	console.log(jonny);
@@ -49,6 +51,8 @@ DbClient.connectedClient.connect().then(async () => {
 </pre>
 
 This should return the first row in the entity 'person' with the firstname 'Jonny'.
+
+Every database operation needs a database context. There is no global connection, see [Database context](database-context.md) for details and for working with multiple databases.
 
 Now make sure to swap your tsc build task with:
 <pre>

@@ -27,8 +27,7 @@ export class ForeignReference<T extends Entity<QueryProxy> | View<QueryProxy>> {
 	}
 	
 	get sourceSet() {
-		const source = new this.$relation();
-		return (source as Entity<QueryProxy>).$$meta.set;
+		return this.$$item.$$context.sibling(this.$relation as new () => Entity<QueryProxy>);
 	}
 
 	async fetch?(): Promise<T> {
@@ -55,9 +54,7 @@ export class PrimaryReference<TSource extends Entity<TQueryProxy>, TQueryProxy e
 	) {}
 	
 	private toQuery() {
-		const itemProxy = new this.$relation();
-
-		return new Query(itemProxy.$$meta.set, [{
+		return new Query(this.$$item.$$context.sibling(this.$relation), [{
 			compare: {
 				operator: "=",
 				left: { path: [ this.$column ] },

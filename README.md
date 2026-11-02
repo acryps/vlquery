@@ -7,6 +7,8 @@ Simple to use TypeScript based database first ORM for postgres.
 
 Example usage:
 <pre>
+const db = new DbContext(new DbClient({ database: "library" }));
+
 const books = await db.book
 	.where(book => book.author.firstname == "Jan")
 	.orderByAscending(book => book.title.lowercase())
@@ -29,6 +31,7 @@ await authorsFirstBookFrom2001.update();
 [Database structure](doc/database-structure.md)<br>
 [Reading, filtering and ordering data](doc/read-filter-order.md)<br>
 [Altering data](doc/altering-data.md)<br>
+[Database context and multiple databases](doc/database-context.md)<br>
 [Adding audits](doc/audit.md)<br>
 [Performance and include](doc/performance-and-include.md)
 
