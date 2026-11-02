@@ -459,7 +459,7 @@ export class DbContext {
 		${viewSets.map(set => `${set.name}: ${set.type};`).join("\n\t\t")}
 	};` : ''}
 
-	constructor(${config.context.runContext ? "public runContext: RunContext, " : ""}public client: DbClient) {
+	constructor(public client: DbClient${config.context.runContext ? ", public runContext: RunContext" : ""}) {
 		${sets.map(set => `this.${set.name} = new ${set.type}(${set.model}, ${config.context.runContext ? "runContext" : "null"}, client);`).join("\n\t\t")}${viewSets.length ? `
 
 		this.views = {
