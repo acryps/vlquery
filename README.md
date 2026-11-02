@@ -7,7 +7,10 @@ Simple to use TypeScript based database first ORM for postgres.
 
 Example usage:
 <pre>
-const db = new DbContext(new DbClient({ database: "library" }));
+const client = new DbClient({ database: "library" });
+await client.connect();
+
+const db = new DbContext(client);
 
 const books = await db.book
 	.where(book => book.author.firstname == "Jan")
@@ -15,11 +18,11 @@ const books = await db.book
 	.toArray();
 
 const author = await db.person.find("&lt;a very long uuid&gt;");
-const authorsFirstBookFrom2001 = await author.books
+const authorsFirstBookFrom2001 = await db.related(author.books)
 	.first(book => book.publishedAt.year == 2001);
 
 authorsFirstBookFrom2001.title = "A new title";
-await authorsFirstBookFrom2001.update();
+await db.update(authorsFirstBookFrom2001);
 </pre>
 
 ## Examples

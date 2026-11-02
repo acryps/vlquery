@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as pathTools from "path";
 import { Connection } from "postgrejs";
 import { config } from "../config";
+import { DatabaseContext } from "../database-context";
 
 export function createContext() {
 	const client = new Connection(config.context.connection);
@@ -113,7 +114,7 @@ export function createContext() {
 		`, { objectRows: true })).rows;
 
 		let context = `
-import { Entity, DbSet, DbClient, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSON, QueryTimeStamp, QueryNumber, QueryTime, QueryDate, QueryBoolean, QueryBuffer, QueryEnum, ForeignReference, PrimaryReference, View, ViewSet } from 'vlquery';
+import { Entity, DbSet, DbClient, DatabaseContext, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSON, QueryTimeStamp, QueryNumber, QueryTime, QueryDate, QueryBoolean, QueryBuffer, QueryEnum, ForeignReference, PrimaryReference, View, ViewSet } from 'vlquery';
 		`.trim() + "\n";
 		let sets = [];
 
@@ -450,31 +451,26 @@ DbSet.$audit = {
 			`;
 		}
 
-		// sets bound to a client (and run context), every DbContext instance can point to a different database
-		context += `\n
-export class DbContext {
-	${sets.map(set => `${set.name}: ${set.type};`).join("\n\t")}${viewSets.length ? `
+		// sets are named after the tables, they must not hide the methods of the database context
+		const reservedNames = [...Object.getOwnPropertyNames(DatabaseContext.prototype), 'views'];
 
-	views: {
-		${viewSets.map(set => `${set.name}: ${set.type};`).join("\n\t\t")}
-	};` : ''}
-
-	constructor(public client: DbClient${config.context.runContext ? ", public runContext: RunContext" : ""}) {
-		${sets.map(set => `this.${set.name} = new ${set.type}(${set.model}, ${config.context.runContext ? "runContext" : "null"}, client);`).join("\n\t\t")}${viewSets.length ? `
-
-		this.views = {
-			${viewSets.map(set => `${set.name}: new ${set.type}(${set.model}, ${config.context.runContext ? "runContext" : "null"}, client)`).join(",\n\t\t\t")}
-		};` : ''}
-	}
-
-	findSet(modelType) {
-		for (let key in this) {
-			if (this[key] instanceof DbSet) {
-				if ((this[key] as any).modelConstructor == modelType) {
-					return this[key];
-				}
+		for (let set of [...sets, ...viewSets]) {
+			if (reservedNames.includes(set.name)) {
+				throw new Error(`Table or view '${set.name}' collides with the DatabaseContext member '${set.name}'. Rename it in the database`);
 			}
 		}
+
+		// every DbContext instance is a connection to one database sharing this structure
+		context += `\n
+export class DbContext extends DatabaseContext {
+	${sets.map(set => `${set.name} = new ${set.type}(${set.model}, this);`).join("\n\t")}${viewSets.length ? `
+
+	views = {
+		${viewSets.map(set => `${set.name}: new ${set.type}(${set.model}, this)`).join(",\n\t\t")}
+	};` : ''}
+
+	constructor(client: DbClient${config.context.runContext ? ", runContext: RunContext" : ""}) {
+		super(client${config.context.runContext ? ", runContext" : ""});
 	}
 };`;
 

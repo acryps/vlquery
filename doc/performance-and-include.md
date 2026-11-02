@@ -56,6 +56,18 @@ await db.book.includeTree({
 }).toArray();
 ```
 
+All included data is stored in the returned entities. Included references can be read without another query
+```
+const books = await db.book.includeTree({ ... }).toArray();
+
+const author = await books[0].author.fetch();
+const reviews = await books[0].reviews.toArray();
+const reviewersBooks = await (await reviews[0].reviewer.fetch()).books.toArray();
+```
+
+Reading a reference which has not been included throws a `DatabaseContextError`, so every query is visible in your code.
+Use `db.fetch(reference)`, `db.related(reference)` or `db.backload(entity, tree)` to load it explicitly, see [Resolving references](read-filter-order.md#resolving-references).
+
 This will create the following SQL-Query (expanded for readability)
 ```
 SELECT json_build_object(

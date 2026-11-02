@@ -37,10 +37,10 @@ CREATE TABLE book (
 
 This will create a context which with the references
 <pre>
-const book = db.book.find(1);
-const author = await book.<b>author</b>.fetch();
+const book = await db.book.find(1);
+const author = await db.fetch(book.<b>author</b>);
 
-author.<b>books</b>.toArray();
+await db.related(author.<b>books</b>).toArray();
 </pre>
 
 You can use `_` in a references name to make it uppercase in the context

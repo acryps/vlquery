@@ -1,9 +1,9 @@
 import { Queryable } from "./queryable";
-import { DbClient } from "./client";
+import { DatabaseContext } from "./database-context";
 import { DatabaseContextError } from "./database-context-error";
 import { QueryProxy } from "./query-proxy";
 import { Query } from "./query";
-import { ForeignReference, PrimaryReference, RunContext } from ".";
+import { ForeignReference, PrimaryReference } from ".";
 import { QueryColumnMapping } from "./query-operators/column-map";
 import { Enum } from "./data-type/enum";
 import { View } from "./view";
@@ -13,20 +13,15 @@ import { findDataType } from "./data-type";
 export class ViewSet<TModel extends View<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	constructor(
 		public modelConstructor: new () => TModel,
-		public runContext?: RunContext,
-		public client?: DbClient
+		public context?: DatabaseContext
 	) {}
 
 	query(sql: string, params: any[]) {
-		this.requireContext();
-
-		return this.client.query(sql, params);
-	}
-
-	requireContext() {
-		if (!this.client) {
-			throw new DatabaseContextError(`No database context set for '${this.$$meta.source}'. Create a DbContext with a DbClient and use its sets, or bind the entity with DbSet.attach`);
+		if (!this.context) {
+			throw new DatabaseContextError(`No database context set for '${this.$$meta.source}'. Use the views of a DbContext`);
 		}
+
+		return this.context.$$query(sql, params);
 	}
 
 	get $$meta() {

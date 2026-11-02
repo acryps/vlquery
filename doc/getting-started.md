@@ -7,7 +7,8 @@ Let's install the vlquery package
 npm install vlquery --save
 </pre>
 
-Now, let's create a vlquery configuration file `vlconfig.json` in your projects root
+Now, let's create a vlquery configuration file `vlconfig.json` in your projects root.
+The connection is only used by the vlquery cli to read your databases structure, your application connects with its own `DbClient`
 <pre>
 {
 	"context": {
@@ -46,13 +47,14 @@ client.connect().then(async () => {
 	console.log(jonny);
 
 	jonny.pageVisits++;
-	await jonny.update();
+	await db.update(jonny);
 });
 </pre>
 
 This should return the first row in the entity 'person' with the firstname 'Jonny'.
 
-Every database operation needs a database context. There is no global connection, see [Database context](database-context.md) for details and for working with multiple databases.
+Every database operation goes through the database context `db`, entities like `jonny` are plain data. 
+See [Database context](database-context.md) for details and for working with multiple databases.
 
 Now make sure to swap your tsc build task with:
 <pre>

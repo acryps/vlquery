@@ -1,10 +1,10 @@
 # Getting and filtering data
-You can get data from the database using the `db` variable
+You can get data from the database using the sets of your database context `db` (see [Database context](database-context.md))
 
 <pre>
 const book = await db.book.find("&lt;uuid&gt;");
 const books = await db.book.toArray();
-const authorCount = await db.authr.count();
+const authorCount = await db.author.count();
 </pre>
 
 ## Conditions
@@ -60,34 +60,72 @@ const books = await db.book
 </pre>
 
 ## Resolving references
-Relations in entities can be resolved like this:
+Entities are plain data. A reference never loads anything by itself, it only holds what has been included in the query.
+Every database access is an explicit, awaited call on the database context.
+
+### Loading references from the database
+Pass the reference to the database context
 <pre>
 const book = await db.book.find("&lt;uuid&gt;");
-const author = <b>await</b> book.author.<b>fetch()</b>;
 
-const authorsBooks = <b>await</b> author<b>.books.toArray()</b>;
+// foreign reference (book -> author)
+const author = <b>await db.fetch(</b>book.author<b>)</b>;
 
-const authorsBooksFrom2001 = await author.books
+// primary reference (author -> books), returns a query
+const authorsBooks = <b>await db.related(</b>author.books<b>).toArray()</b>;
+
+const authorsBooksFrom2001 = await db.related(author.books)
 	.where(book => book.publishedAt.year == 2001) // add a condition
 	.orderByAscending(book => book.title) // and an order
 	.toArray();
+
+const bookCount = await db.related(author.books).count();
 </pre>
 
-vlquery was designed to be as simple to use as Microsofts EntityFramework. 
-Everybody who used Entity in a big project had to deal with the big implications that come with inexplicit lazy loading, thus we never implemented it into the framework. 
-Every database access requires an await and thus reduces the chances of introducing performance issues.
-If you want to prefetch certain items to improve performance, you can do it like this.
-The `fetch`-call is still required!
+`db.fetch` returns `null` if the reference is empty (the id is `null`).
+`db.related` returns a regular query, everything from this page can be used on it, including `include`.
 
+### Reading included references
+References included in the query can be read from the entity directly, without a database context.
+This reduces the number of queries, see [Performance and include](performance-and-include.md).
 <pre>
 const books = await db.book
 	<b>.include(book => book.author)</b> // preload authors
 	.toArray();
 
 for (let book of books) {
-	const author = await book.author.fetch(); // this will resolve instantly
+	const author = await book.author.fetch(); // resolves instantly, no query
 }
+
+const authors = await db.author
+	<b>.include(author => author.books)</b>
+	.toArray();
+
+const authorsBooks = await authors[0].books.toArray(); // resolves instantly, no query
 </pre>
+
+`book.author.fetch()` and `author.books.toArray()` throw a `DatabaseContextError` if the reference has not been included.
+Use `hasPrefetched` to check if a reference has been included
+<pre>
+const author = book.author.hasPrefetched ? await book.author.fetch() : await db.fetch(book.author);
+</pre>
+
+`db.fetch` returns included references too, without running a query. If you're not sure if a reference has been included, use `db.fetch`.
+
+### Loading missing references
+`backload` loads all references in the tree which have not been included yet
+<pre>
+const book = await db.book.find("&lt;uuid&gt;");
+
+await db.backload(book, {
+	author: { firstname: true },
+	reviews: { title: true }
+});
+
+const author = await book.author.fetch(); // resolves instantly
+</pre>
+
+Only the references on the first level are loaded, missing references deeper in the tree will not be loaded.
 
 ## Limit, skip and paging
 The bigger your database gets, the more important this will be.
@@ -100,5 +138,5 @@ const books51to100 = await db.book.page(1, 50).toArray();
 
 You can set the default page size by setting
 <pre>
-Qurey.defaultPageSize = 120;
+Query.defaultPageSize = 120;
 </pre>

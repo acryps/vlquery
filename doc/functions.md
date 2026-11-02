@@ -42,7 +42,7 @@ column.byteLength(): QueryNumber // gets the byte length of the data
 ## Chaining
 Functions with a query type return value (eg. `QueryString`, ...) can be chained
 ```
-await this.books
+await db.related(author.books)
     .where(book => book.title.lowercase().includes("test"))
     .orderByAscending(book => book.author.firstname.lowercase())
     .toArray()

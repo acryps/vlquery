@@ -1,16 +1,15 @@
 import { Queryable } from "./queryable";
 import { Entity } from "./entity";
-import { DbClient } from "./client";
+import { DatabaseContext } from "./database-context";
 import { DatabaseContextError } from "./database-context-error";
 import { QueryProxy } from "./query-proxy";
 import { Query } from "./query";
-import { ForeignReference, PrimaryReference, RunContext } from ".";
+import { ForeignReference, PrimaryReference } from ".";
 import { QueryColumnMapping } from "./query-operators/column-map";
 import { BaseDataType } from "./data-type/base";
 import { Enum } from "./data-type/enum";
 import { BlobExtent } from "./blob";
 import { findDataType } from "./data-type";
-import { StoredProperty } from "./stored-property";
 
 export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends QueryProxy> implements Queryable<TModel, TQueryProxy> {
 	static $audit: {
@@ -23,215 +22,19 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 	constructor(
 		public modelConstructor: new () => TModel,
-		public runContext?: RunContext,
-		public client?: DbClient
+		public context?: DatabaseContext
 	) {}
 
 	get $$meta() {
 		return new this.modelConstructor().$$meta;
 	}
 
-	// set of another model sharing this sets client and run context
-	sibling<TOther extends Entity<TOtherQueryProxy>, TOtherQueryProxy extends QueryProxy>(modelConstructor: new () => TOther) {
-		return new DbSet<TOther, TOtherQueryProxy>(modelConstructor, this.runContext, this.client);
-	}
-
-	// two sets share a context if they use the same client and run context
-	sharesContext(set: DbSet<Entity<QueryProxy>, QueryProxy>) {
-		return set.client == this.client && set.runContext == this.runContext;
-	}
-
-	// binds the item to this set, item.create(), .update() and .delete() as well as its references will use this sets client and run context
-	// an item can only be bound to one context, use item.detach() to release it
-	attach<T extends TModel>(item: T): T {
-		this.requireContext();
-
-		if (item.$$set) {
-			if (!this.sharesContext(item.$$set)) {
-				throw new DatabaseContextError(`This '${this.$$meta.source}' is already attached to another database context. Call .detach() before using it in this context`);
-			}
-
-			if (item.$$set == this) {
-				return item;
-			}
-		}
-
-		Object.defineProperty(item, '$$set', {
-			value: this,
-			enumerable: false,
-			configurable: true,
-			writable: true
-		});
-
-		return item;
-	}
-
 	query(sql: string, params: any[]) {
-		this.requireContext();
-
-		return this.client.query(sql, params);
-	}
-
-	requireContext() {
-		if (!this.client) {
-			throw new DatabaseContextError(`No database context set for '${this.$$meta.source}'. Create a DbContext with a DbClient and use its sets, or bind the entity with DbSet.attach`);
-		}
-	}
-
-	private async audit(action: "create" | "update" | "delete", comment: string, item: TModel) {
-		const audit = await DbSet.$audit.createAudit(action, comment, item, this.runContext);
-
-		this.sibling(audit.constructor as new () => Entity<QueryProxy>).create(audit);
-	}
-
-	async create(item: TModel, comment?: string) {
-		this.requireContext();
-
-		// fails if the item belongs to another context
-		this.attach(item);
-
-		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
-			if (DbSet.$audit.commentRequired && !comment) {
-				throw new Error("No audit comment for create set!");
-			}
-
-			if (DbSet.$audit.contextRequired && !this.runContext) {
-				throw new Error(`Create called without a run context! Use the DbSet's create function`);
-			}
+		if (!this.context) {
+			throw new DatabaseContextError(`No database context set for '${this.$$meta.source}'. Use the sets of a DbContext`);
 		}
 
-		const properties = this.getStoredProperties(item);
-
-		if (item.$$meta.active) {
-			properties.push({
-				key: null,
-				name: item.$$meta.active,
-				value: true,
-				type: "boolean"
-			});
-		}
-
-		const id = (await this.query(`INSERT INTO ${JSON.stringify(item.$$meta.source)} (${
-			["id", ...properties.map(p => `"${p.name}"`)]
-		}) VALUES (${
-			["DEFAULT", ...properties.map((parameter, index) => findDataType(parameter.type).sqlParameterTransform(index + 1, parameter))]
-			}) RETURNING id`, properties.map(parameter => findDataType(parameter.type).toSQLParameter(parameter))))[0][0];
-
-		item.id = id;
-
-		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
-			await this.audit("create", comment, item);
-		}
-
-		return item;
-	}
-
-	async update(item: TModel, comment?: string) {
-		this.requireContext();
-
-		if (!item.id) {
-			throw new Error("Cannot update entity, an id is required!");
-		}
-
-		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
-			if (DbSet.$audit.commentRequired && !comment) {
-				throw new Error("No audit comment for update set!");
-			}
-
-			if (DbSet.$audit.contextRequired && !this.runContext) {
-				throw new Error(`Update called without a run context! Use the DbSet's update function`);
-			}
-		}
-
-		this.attach(item);
-
-		const properties = this.getStoredProperties(item);
-
-		await this.query(`UPDATE ${JSON.stringify(item.$$meta.source)} SET ${properties.map(
-			(parameter, index) => `"${parameter.name}" = ${findDataType(parameter.type).sqlParameterTransform(index + 2, parameter)}`
-		)} WHERE id = $1`, [
-			item.id,
-			...properties.map(parameter => findDataType(parameter.type).toSQLParameter(parameter))
-		]);
-
-		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
-			await this.audit("update", comment, item);
-		}
-
-		return item;
-	}
-
-	async delete(item: TModel, comment?: string) {
-		this.requireContext();
-
-		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
-			if (DbSet.$audit.commentRequired && !comment) {
-				throw new Error("No audit comment for delete set!");
-			}
-
-			if (DbSet.$audit.contextRequired && !this.runContext) {
-				throw new Error(`Delete called without a run context! Use the DbSet's delete function`);
-			}
-		}
-
-		// make sure the references are resolved against this sets client
-		this.attach(item);
-
-		for (let key in item) {
-			const column = item[key];
-
-			if (key[0] == "$" && column instanceof PrimaryReference) {
-				const count = await column.count();
-
-				if (count) {
-					throw new Error(`Cannot delete '${item.id}' from '${this.$$meta.source}'. ${count} items from '${new column.$relation().$$meta.source}' still reference it`);
-				}
-			}
-		}
-
-		if (item.$$meta.active) {
-			await this.query(`
-
-				UPDATE ${JSON.stringify(item.$$meta.source)}
-				SET _active = false
-				WHERE id = $1
-
-			`, [
-				item.id
-			]);
-		} else {
-			await this.query(`
-
-				DELETE FROM ${JSON.stringify(item.$$meta.source)}
-				WHERE id = $1
-
-			`, [
-				item.id
-			]);
-		}
-
-		if (DbSet.$audit && DbSet.$audit.table != this.$$meta.source) {
-			await this.audit("delete", comment, item);
-		}
-	}
-
-	private getStoredProperties(item: TModel) {
-		const properties: StoredProperty[] = [];
-
-		for (let key in item) {
-			const column = item.$$meta.columns[key];
-
-			if (column) {
-				properties.push({
-					key,
-					value: item[key],
-					type: column.type,
-					name: column.name
-				});
-			}
-		}
-
-		return properties;
+		return this.context.$$query(sql, params);
 	}
 
 	async find(id: string | number) {
@@ -291,7 +94,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 	}
 
 	constructObject(base: any, columnMappings: QueryColumnMapping<TModel, TQueryProxy>[], path: string[], blobSource: any = [], blobFields: BlobExtent[] = []) {
-		const model = this.attach(new this.modelConstructor());
+		const model = new this.modelConstructor();
 		const leaf = [];
 
 		for (let mapping of columnMappings) {
@@ -338,7 +141,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 					let child;
 
 					if (base[idMapping.name]) {
-						child = this.sibling(relation.$relation as new () => Entity<QueryProxy>).constructObject(base, columnMappings, [
+						child = (new relation.$relation().$$meta.set).constructObject(base, columnMappings, [
 							...path,
 							key.replace("$", "")
 						]);
@@ -356,7 +159,7 @@ export class DbSet<TModel extends Entity<TQueryProxy>, TQueryProxy extends Query
 
 			if (relation instanceof PrimaryReference && key in base) {
 				if (key in base) {
-					const set = this.sibling(relation.$relation);
+					const set = (new relation.$relation()).$$meta.set;
 
 					const items = (base[key] || []).map(item => set.constructObject(item, columnMappings, [
 						...path,
