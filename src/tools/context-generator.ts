@@ -206,7 +206,7 @@ export class ${convertToClassName(enumeration)} extends QueryEnum {
 				const parts = constraint.constraint_name.split("__");
 
 				if (parts.length != 2) {
-					throw new Error(`Invalid constraint name '${constraint.constraint_name}' from ${constraint.table_name}.${constraint.column_name} to ${constraint.foreign_table_name}.id`);
+					continue;
 				}
 
 				if (constraint.table_name == table && parts[0]) {
