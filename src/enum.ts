@@ -1,5 +1,3 @@
 export class QueryEnum {
-	static $$meta: {
-		source: string;
-	}
+	static types: Record<string, typeof QueryEnum>;
 }

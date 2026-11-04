@@ -17,12 +17,6 @@ export class QueryParameter<TModel extends Entity<TQueryModel> | View<TQueryMode
 	}
 
 	toParameterReference() {
-		if (this.value && this.value instanceof QueryEnum) {
-			const type = this.value.constructor as typeof QueryEnum;
-
-			return `${this.name}::${type.$$meta.source}`;
-		}
-
 		return this.name;
 	}
 

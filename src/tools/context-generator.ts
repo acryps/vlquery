@@ -127,12 +127,18 @@ import { Entity, DbSet, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSO
 		for (let enumeration in enums) {
 			context += `
 export class ${convertToClassName(enumeration)} extends QueryEnum {
-	$$meta = { source: '${enumeration}' };
-
 	${enums[enumeration].map(e => `static readonly ${convertToModelName(e)} = ${JSON.stringify(e)};`).join("\n\t")}
 }
 `;
 		}
+
+		context += `QueryEnum.types = {\n`;
+
+		for (let enumeration in enums) {
+			context += `\t'${enumeration}': ${convertToClassName(enumeration)},\n`
+		}
+
+		context += '}\n\n';
 
 		for (let table of tables.map(t => t.tablename)) {
 			config.compile.verbose && console.group(table);

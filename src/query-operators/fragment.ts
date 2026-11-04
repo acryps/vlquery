@@ -9,6 +9,7 @@ import { CompiledQuery } from "../compiled-query";
 import { QueryParameter } from "./parameter";
 import { QueryExtent } from "./extent";
 import { View } from "../view";
+import { QueryEnum } from "../enum";
 
 export class QueryFragment<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQueryModel extends QueryProxy> {
 	compare?: {
@@ -103,9 +104,15 @@ export class QueryFragment<TModel extends Entity<TQueryModel> | View<TQueryModel
 				const proxy = new set.modelConstructor();
 
 				if (component) {
+					let access = component.name;
+
+					if (component.type in QueryEnum.types) {
+						access = `${access}::text`;
+					}
+
 					// simple attribute
 					this.path = {
-						column: component.name,
+						column: access,
 						extent
 					};
 				}
