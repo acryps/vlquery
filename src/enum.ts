@@ -1,1 +1,5 @@
-export class QueryEnum {}
+export class QueryEnum {
+	static $$meta: {
+		source: string;
+	}
+}

@@ -127,6 +127,8 @@ import { Entity, DbSet, RunContext, QueryUUID, QueryProxy, QueryString, QueryJSO
 		for (let enumeration in enums) {
 			context += `
 export class ${convertToClassName(enumeration)} extends QueryEnum {
+	$$meta = { source: '${enumeration}' };
+
 	${enums[enumeration].map(e => `static readonly ${convertToModelName(e)} = ${JSON.stringify(e)};`).join("\n\t")}
 }
 `;

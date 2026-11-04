@@ -76,8 +76,7 @@ export class QueryFragment<TModel extends Entity<TQueryModel> | View<TQueryModel
 		if ("value" in tree) {
 			if (tree.value === null) {
 				this.isNull = true;
-			}
-			else {
+			} else {
 				this.valueParameter = new QueryParameter(query, tree.value);
 			}
 		}
@@ -162,30 +161,25 @@ export class QueryFragment<TModel extends Entity<TQueryModel> | View<TQueryModel
 				}
 			}
 
-			return `(${
-				this.compare.left.toSQL()} ${this.compare.operator} ${
-				this.compare.right.toSQL()})`;
+			return `(${this.compare.left.toSQL()} ${this.compare.operator} ${this.compare.right.toSQL()})`;
 		}
 
 		if (this.logical) {
-			return `(${
-				this.logical.left.toSQL()} ${this.logical.operator} ${
-				this.logical.right.toSQL()})`;
+			return `(${this.logical.left.toSQL()} ${this.logical.operator} ${this.logical.right.toSQL()})`;
 		}
 
 		if (this.call) {
 			let body = this.call.source.toSQL();
 
-            for (let call of this.call.calls) {
-                body = call.to.toSQL(body, call.parameters);
-            }
+			for (let call of this.call.calls) {
+				body = call.to.toSQL(body, call.parameters);
+			}
 
-            return `(${body})`;
+			return `(${body})`;
 		}
 
 		if (this.valueParameter) {
-			;
-			return this.valueParameter.name;
+			return this.valueParameter.toParameterReference();
 		}
 
 		if (this.path) {

@@ -5,8 +5,6 @@ export class Enum extends BaseDataType {
 	static loadAsBlob = false;
 
 	static sqlParameterTransform(parameterIndex: number, parameter: StoredProperty) {
-		console.log('enum', parameterIndex, parameter);
-
 		return `$${parameterIndex}::${parameter.type}`;
 	}
 

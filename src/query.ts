@@ -79,7 +79,7 @@ export class Query<TModel extends Entity<TQueryModel> | View<TQueryModel>, TQuer
 	}
 
 	private async toArrayRaw(): Promise<any[]> {
-		return await DbClient.query(this.toSQL(), this.parameters.map(p => p.value));
+		return await DbClient.query(this.toSQL(), this.parameters.map(p => p.toParameterValue()));
 	}
 
 	async toArray(): Promise<TModel[]> {
