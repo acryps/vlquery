@@ -14,9 +14,12 @@
 	},
 	"author": "Levi Hechenberger",
 	"license": "GPL-3.0-only",
+	"engines": {
+		"node": ">=22.12.0"
+	},
 	"dependencies": {
 		"esprima": "^4.0.1",
-		"postgrejs": "^2.22.9"
+		"postgrejs": "^3.14.1"
 	},
 	"devDependencies": {
 		"@types/node": "^25.0.3",
